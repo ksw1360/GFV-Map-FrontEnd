@@ -10,22 +10,22 @@ export default function MainPage() {
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // 로그인 모달이 성공적으로 인증을 마쳤을 때
+    // 로그인 성공 시 메인 지도 UI 활성화
     const handleModalClose = () => {
         setIsAuthOpen(false);
         setIsLoggedIn(true);
     };
 
-    // 🛠️ 로그아웃 제어 핸들러 함수 선언
+    // 로그아웃 클릭 시 메인 첫 웰컴 안내 스크린으로 이탈
     const handleLogout = () => {
         if (confirm('로그아웃 하시겠습니까?')) {
-            setIsLoggedIn(false); // 상태 변환을 통해 시작 웰컴 패널로 동선 리다이렉트
+            setIsLoggedIn(false);
         }
     };
 
     return (
         <>
-            {/* 시나리오 A: 로그인 전 (소중한 시작페이지 완벽 보존) */}
+            {/* 시나리오 A: 로그인 전 (웰컴 스크린) */}
             {!isLoggedIn ? (
                 <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 select-none">
                     <div className="text-center space-y-4 animate-in fade-in zoom-in-95 duration-300">
@@ -46,11 +46,11 @@ export default function MainPage() {
                     </div>
                 </div>
             ) : (
-                /* 시나리오 B: 로그인 후 (진짜 비건 지도 UI 개방) */
+                /* 시나리오 B: 로그인 후 (본체 비건 지도 시스템) */
                 <div className="h-screen w-screen flex flex-col overflow-hidden select-none bg-white animate-in fade-in duration-500">
 
-                    {/* ⚠️ Header 조립 라인에 handleLogout 함수 배달 연결 완료! */}
-                    <Header onOpenAuth={() => setIsAuthOpen(true)} onLogout={handleLogout} />
+                    {/* Header 컴포넌트에 마이페이지 라우터 내장형 프롭스 연결 완료 */}
+                    <Header onLogout={handleLogout} />
 
                     <div className="flex-1 relative w-full h-full overflow-hidden">
                         <MapContainer />
