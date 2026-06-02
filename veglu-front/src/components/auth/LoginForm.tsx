@@ -1,22 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
+// ★ [A방법 반영] 이미 완벽하게 수선된 진짜 소셜 로그인 컴포넌트를 가져옵니다.
 import SocialLogin from './SocialLogin';
 
 interface LoginFormProps {
-<<<<<<< HEAD
     setViewMode: (mode: 'LOGIN' | 'SIGNUP' | 'FIND_ID' | 'FIND_PW') => void;
-=======
-    setViewMode: (mode: AuthViewMode) => void;
->>>>>>> mypage
     onClose: () => void;
 }
 
 export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
-<<<<<<< HEAD
     // 입력 필드 상태 관리
-=======
->>>>>>> mypage
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +26,6 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
             setError('이메일과 비밀번호를 모두 입력해 주세요.');
             return;
         }
-<<<<<<< HEAD
 
         setIsLoading(true);
 
@@ -72,11 +65,6 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
         } finally {
             setIsLoading(false);
         }
-=======
-        console.log('로그인 시도 데이터:', { email, password });
-        alert('로그인 성공! 메인화면(F-MAP-001)으로 이동합니다.');
-        onClose();
->>>>>>> mypage
     };
 
     // ──────────────────────────────────────────────────────────
