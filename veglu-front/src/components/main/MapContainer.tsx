@@ -4,8 +4,10 @@ import React from 'react';
 
 export default function MapContainer() {
     return (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-            {/* 실제 지도 API가 연동되기 전 격자 그리드 형태의 가상 백그라운드 */}
+        // 👇 absolute inset-0에 min-h-full을 더해 부모가 찌그러트려도 무조건 꽉 차게 늘어나도록 방어합니다.
+        <div className="absolute inset-0 min-w-full min-h-full bg-gray-100 flex items-center justify-center z-0">
+
+            {/* 실제 지도 API가 연동되기 전 가상 백그라운드 */}
             <div className="text-center space-y-2 pointer-events-none select-none">
                 <div className="text-4xl">🗺️</div>
                 <h2 className="font-bold text-gray-400 text-sm tracking-wide">

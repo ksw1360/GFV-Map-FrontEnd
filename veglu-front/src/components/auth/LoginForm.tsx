@@ -1,78 +1,139 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AuthViewMode } from './AuthModal';
+import { useRouter } from 'next/navigation';
 import SocialLogin from './SocialLogin';
 
 interface LoginFormProps {
-    setViewMode: (mode: AuthViewMode) => void;
+    setViewMode: (mode: 'LOGIN' | 'SIGNUP' | 'FIND_ID' | 'FIND_PW') => void;
     onClose: () => void;
 }
 
 export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
+    const router = useRouter();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleLoginSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password) {
-            setError('이메일과 비밀번호를 모두 입력해주세요.');
+        setError(null);
+
+        if (!email.trim() || !password.trim()) {
+            setError('이메일과 비밀번호를 모두 입력해 주세요.');
             return;
         }
-        console.log('로그인 시도 데이터:', { email, password });
-        alert('로그인 성공! 메인화면(F-MAP-001)으로 이동합니다.');
-        onClose();
+
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('http://192.168.7.120:5000/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                }),
+            });
+
+            if (!response.ok) {
+                setError('이메일 또는 비밀번호가 다릅니다.');
+                setIsLoading(false);
+                return;
+            }
+
+            const data = await response.json();
+
+            // ──────────────────────────────────────────────────────────
+            // 🔄 [리팩토링 반영] MainPage의 자동 로그인 레이어와 토큰 이름 동기화
+            // ──────────────────────────────────────────────────────────
+            if (data.accessToken) {
+                // MainPage가 읽어가는 이름인 'accessToken', 'refreshToken' 구조로 금고 고정
+                localStorage.setItem('accessToken', data.accessToken);
+                if (data.refreshToken) {
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                }
+
+                // 백엔드 응답이 { "accessToken": "...", "nickname": "내이름" } 구조일 때의 조치
+                const finalNickname = data.nickname || data.user?.nickname || '익명유저';
+                const finalAvatar = data.profileImageUrl || data.user?.profileImageUrl || 'default';
+
+                localStorage.setItem('user_nickname', finalNickname);
+                localStorage.setItem('user_avatar', finalAvatar);
+            }
+            // ──────────────────────────────────────────────────────────
+
+            // ◀ 모달을 닫아준 직후, 지도가 있는 메인 홈('/')으로 즉시 내비게이션 이동
+            onClose();
+
+            // 💡 팁: 상태 세션 변화를 감지해 헤더나 사이드바 UI를 한 번에 새로고침 렌더링하려면
+            window.location.href = '/';
+
+        } catch (err) {
+            setError('서버 연결에 실패했습니다. 네트워크 상태를 확인해 주세요.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div>
-            <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">로고</h1>
-                <p className="text-xs text-gray-400 mt-1">소개 텍스트를 입력하는 공간입니다.</p>
-            </div>
-
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
+        <div className="w-full space-y-5 text-xs select-none">
+            <form onSubmit={handleSubmit} className="space-y-4 w-full">
+                <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">이메일 주소</label>
                     <input
-                        type="text"
-                        placeholder="이메일 또는 아이디"
+                        type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="example@domain.com"
+                        disabled={isLoading}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all font-medium text-gray-800"
                     />
                 </div>
-                <div>
+
+                <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">비밀번호</label>
                     <input
                         type="password"
-                        placeholder="비밀번호"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="••••••••"
+                        disabled={isLoading}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all text-gray-800"
                     />
                 </div>
 
-                {error && <p className="text-xs text-red-500 font-medium">⚠️ {error}</p>}
+                {error && (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl animate-in fade-in duration-150">
+                        <p className="text-[11px] font-semibold text-red-600 flex items-center">
+                            <span className="mr-1.5">⚠️</span> {error}
+                        </p>
+                    </div>
+                )}
 
-                <button
-                    type="submit"
-                    className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-xl text-sm transition-all"
-                >
-                    로그인하기
-                </button>
+                <div className="pt-1">
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-3.5 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl transition-all shadow-md active:scale-[0.99]"
+                    >
+                        {isLoading ? '인증 정보 검증 중...' : '비건 안심 지도 로그인'}
+                    </button>
+                </div>
             </form>
 
-            {/* 공통 소셜 로그인 배치 */}
-            <SocialLogin />
-
-            {/* 하단 스위칭 링크 영역 */}
-            <div className="flex justify-center items-center space-x-3 text-xs text-gray-400 mt-6">
-                <button onClick={() => setViewMode('FIND_ID')} className="hover:underline hover:text-gray-600">아이디 찾기</button>
-                <span>|</span>
-                <button onClick={() => setViewMode('FIND_PW')} className="hover:underline hover:text-gray-600">비밀번호 찾기</button>
-                <span>|</span>
-                <button onClick={() => setViewMode('SIGNUP')} className="hover:underline text-gray-900 font-bold">회원가입</button>
+            <div className="flex items-center justify-center space-x-3 text-gray-400 font-medium border-b border-gray-100 pb-4">
+                <button type="button" onClick={() => setViewMode('FIND_ID')} className="hover:text-gray-600 transition-colors">아이디 찾기</button>
+                <span className="text-gray-200">|</span>
+                <button type="button" onClick={() => setViewMode('FIND_PW')} className="hover:text-gray-600 transition-colors">비밀번호 찾기</button>
+                <span className="text-gray-200">|</span>
+                <button type="button" onClick={() => setViewMode('SIGNUP')} className="text-green-700 font-bold hover:underline">회원가입</button>
             </div>
+            <SocialLogin />
         </div>
     );
 }

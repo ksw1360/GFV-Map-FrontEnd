@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Gradle 설정 및 빌드 파일
+.gradle/
+build/
+bin/
+out/
+
+# IntelliJ IDEA 설정 파일
+.idea/
+*.iml
