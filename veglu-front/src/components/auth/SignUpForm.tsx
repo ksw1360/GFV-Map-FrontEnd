@@ -32,6 +32,8 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
     const [profileFile, setProfileFile] = useState<File | null>(null);
     // ★ [추가] 선택한 사진을 화면에 둥글게 미리 보여주기(Preview) 위한 임시 URL 주소창 상태
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    // 사용자 역할 선택 변수
+    const [role, setRole] = useState<'USER' | 'OWNER'>('USER');
 
     // 인증 유효시간 제한용 카운트다운 타이머 이펙트
     useEffect(() => {
@@ -211,10 +213,29 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
         <div>
             <div className="text-center mb-6">
                 <h1 className="text-xl font-bold text-gray-900">회원가입</h1>
-                <p className="text-xs text-gray-400 mt-1">안심 지도 서비스의 회원이 되어보세요.</p>
+                <p className="text-xs text-gray-400 mt-1">비건 지도 서비스의 회원이 되어보세요.</p>
             </div>
 
             <form onSubmit={handleSignUpSubmit} className="space-y-3">
+
+                {/* 0. JSX에 역할 선택 라디오 버튼 추가 */}
+                <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">회원 유형</label>
+                    <div className="flex space-x-4">
+                        <label className="flex items-center block text-xs font-medium text-gray-600 mb-1">
+                            <input
+                                type="radio" name="role" value="USER" checked={role === 'USER'}
+                                onChange={() => setRole('USER')} className="mr-2"
+                            /> 일반 사용자
+                        </label>
+                        <label className="flex items-center block text-xs font-medium text-gray-600 mb-1">
+                            <input
+                                type="radio" name="role" value="OWNER" checked={role === 'OWNER'}
+                                onChange={() => setRole('OWNER')} className="mr-2"
+                            /> 점주님
+                        </label>
+                    </div>
+                </div>
 
                 {/* 1. 아이디/이메일 구역 */}
                 <div>
