@@ -21,6 +21,7 @@ export default function Header({ onLogout }: HeaderProps) {
     // ──────────────────────────────────────────────────────────
     const [nickname, setNickname] = useState('위치삼');
     const [profileImageUrl, setProfileImageUrl] = useState('default'); // avatar 상태를 DTO 명세로 변경
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         const savedNickname = localStorage.getItem('user_nickname');
@@ -28,6 +29,8 @@ export default function Header({ onLogout }: HeaderProps) {
 
         if (savedNickname) setNickname(savedNickname);
         if (savedAvatar) setProfileImageUrl(savedAvatar);
+
+        setIsMounted(true); // ◀ 화면 준비 완료 신호 켜기
     }, []);
     // ──────────────────────────────────────────────────────────
 
@@ -48,6 +51,11 @@ export default function Header({ onLogout }: HeaderProps) {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    if (!isMounted) {
+        // 마운트되기 전(서버 pre-rendering 단계)에는 빈 헤더 틀만 보여주어 꼬임을 원천 차단
+        return <header className="h-16 border-b border-gray-200 bg-white" />;
+    }
 
     return (
         <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 z-30 shadow-sm relative">
