@@ -9,19 +9,29 @@ interface SignUpFormProps {
 
 export default function SignUpForm({ setViewMode }: SignUpFormProps) {
     const [formData, setFormData] = useState({
-        email: '', phone: '', nickname: '', password: '', confirmPassword: '', bio: ''
+        email: '',
+        phone: '',
+        nickname: '',
+        password: '',
+        confirmPassword: '',
+        bio: ''
     });
 
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     // ──────────────────────────────────────────────────────────
-    // 🌱 이메일 실시간 검증 레이어 전용 상태 머신
+    // 🌱 이메일 및 [신규 추가] 프로필 사진 전용 상태 머신
     // ──────────────────────────────────────────────────────────
-    const [emailCode, setEmailCode] = useState('');          // 유저가 입력한 6자리 인증번호
-    const [isCodeSent, setIsCodeSent] = useState(false);      // 인증번호가 발송되었는지 여부
-    const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 검증 완결 여부
-    const [timeLeft, setTimeLeft] = useState(300);            // 5분 타이머 (300초)
+    const [emailCode, setEmailCode] = useState('');
+    const [isCodeSent, setIsCodeSent] = useState(false);
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(300);
+
+    // ★ [추가] 유저가 선택한 진짜 파일 객체를 담아둘 상태 관리 장치
+    const [profileFile, setProfileFile] = useState<File | null>(null);
+    // ★ [추가] 선택한 사진을 화면에 둥글게 미리 보여주기(Preview) 위한 임시 URL 주소창 상태
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     // 인증 유효시간 제한용 카운트다운 타이머 이펙트
     useEffect(() => {
@@ -45,8 +55,27 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // ★ [추가] 사진 선택 상자가 변했을 때 파일 정보를 가로채는 핸들러 함수
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const pickedFile = e.target.files[0];
+            setProfileFile(pickedFile); // 진짜 이미지 바이너리 저장
+
+            // 브라우저 메모리에 가상의 가짜 URL을 따서 미리보기 화면 갱신
+            const objectUrl = URL.createObjectURL(pickedFile);
+            setPreviewUrl(objectUrl);
+        }
+    };
+
+    // 컴포넌트가 꺼질 때 메모리 누수 방지를 위한 가비지 컬렉션 처리
+    useEffect(() => {
+        return () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [previewUrl]);
+
     // ──────────────────────────────────────────────────────────
-    // 📩 [추가] 1단계 - 이메일로 인증번호 발송 요청 API
+    // 📩 1단계 - 이메일로 인증번호 발송 요청 API
     // ──────────────────────────────────────────────────────────
     const handleSendVerificationCode = async () => {
         setError('');
@@ -57,8 +86,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
 
         setIsLoading(true);
         try {
-            // 주신 로컬 백엔드 서버 주소와 포트(5000)를 기준으로 통신합니다.
-            const response = await fetch('http://192.168.7.120:5000/auth/signup', {
+            const response = await fetch('http://192.168.7.120:5000/auth/email/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.email })
@@ -71,7 +99,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
             }
 
             setIsCodeSent(true);
-            setTimeLeft(300); // 5분(300초) 초기화
+            setTimeLeft(300);
             alert('입력하신 이메일로 인증번호가 발송되었습니다.');
 
         } catch (err) {
@@ -82,7 +110,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
     };
 
     // ──────────────────────────────────────────────────────────
-    // 🔑 [추가] 2단계 - 유저가 친 인증번호 검증 완료 처리 API
+    // 🔑 2단계 - 유저가 친 인증번호 검증 완료 처리 API
     // ──────────────────────────────────────────────────────────
     const handleVerifyEmailCode = async () => {
         setError('');
@@ -97,7 +125,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
 
         setIsLoading(true);
         try {
-            const response = await fetch('http://192.168.7.120:5000/auth/verify-email', {
+            const response = await fetch('http://192.168.7.120:5000/auth/email/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -129,7 +157,6 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
         e.preventDefault();
         setError('');
 
-        // [방어막] 이메일 인증이 가동되지 않았다면 가입 차단
         if (!isEmailVerified) {
             setError('이메일 인증을 완료하셔야 회원가입이 가능합니다.');
             return;
@@ -143,6 +170,8 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
         setIsLoading(true);
 
         try {
+            // ★ [리팩토링 반영] 필수항목 + Nullable 비필수 항목(전화번호, 자기소개, 프로필사진 경로)
+            // 을 백엔드 자바 DTO 명세 양식에 맞춰 빈 값 가드를 쳐서 JSON 바디에 정렬 수입합니다.
             const response = await fetch('http://192.168.7.120:5000/auth/signup', {
                 method: 'POST',
                 headers: {
@@ -150,9 +179,13 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                 },
                 body: JSON.stringify({
                     email: formData.email,
+                    code: emailCode,
                     phone: formData.phone,
                     nickname: formData.nickname,
                     password: formData.password,
+                    // 사진 파일은 쌩으로 드래그해 넣을 수 없으므로, 파일 명칭 문자열만 토스하거나
+                    // 비어있을 때는 정석대로 null 처리를 유도하여 백엔드 DTO 바인딩 에러를 파쇄합니다.
+                    profileImageUrl: profileFile ? profileFile.name : null,
                     bio: formData.bio
                 })
             });
@@ -183,7 +216,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
 
             <form onSubmit={handleSignUpSubmit} className="space-y-3">
 
-                {/* 1. 아이디/이메일 및 인증번호 발송 단추 */}
+                {/* 1. 아이디/이메일 구역 */}
                 <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">아이디(이메일)</label>
                     <div className="flex space-x-2">
@@ -193,7 +226,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                             required
                             value={formData.email}
                             onChange={handleChange}
-                            disabled={isLoading || isEmailVerified} // 인증 완료 시 이메일 수정 금지 고정
+                            disabled={isLoading || isEmailVerified}
                             className="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                             placeholder="example@email.com"
                         />
@@ -208,7 +241,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                     </div>
                 </div>
 
-                {/* 2. [요청 사양 반영] 인증번호 입력란 및 실시간 빨간색 5분 타이머 */}
+                {/* 2. 인증번호 입력란 */}
                 {isCodeSent && (
                     <div className="animate-in fade-in duration-200">
                         <label className="block text-xs font-medium text-gray-600 mb-1">인증번호 입력</label>
@@ -223,7 +256,6 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm pr-14 focus:outline-none text-gray-800 font-mono"
                                     placeholder="6자리 숫자"
                                 />
-                                {/* 우측 내부에 정렬될 빨간 글씨 카운트다운 타이머 */}
                                 {!isEmailVerified && (
                                     <span className="absolute right-3 top-2.5 text-xs text-red-500 font-bold font-mono">
                                         {formatTime(timeLeft)}
@@ -298,16 +330,22 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                     />
                 </div>
 
-                {/* 프로필 사진 컴포넌트 자리 */}
+                {/* ★ [수선 완료] 프로필 사진 업로드 및 미리보기 연동 트랙 */}
                 <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">프로필 사진</label>
                     <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-xs text-gray-400">사진</div>
+                        {/* 이미지가 있으면 딴 가짜 URL을 렌더링하고, 없으면 아보카도 이모지를 배치 */}
+                        {previewUrl ? (
+                            <img src={previewUrl} alt="Preview" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                        ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-lg shadow-inner">🥑</div>
+                        )}
                         <input
                             type="file"
                             accept="image/*"
+                            onChange={handleFileChange} // 핸들러 가동
                             disabled={isLoading}
-                            className="text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:bg-gray-100 hover:file:bg-gray-200 disabled:opacity-50"
+                            className="text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-gray-200 file:text-xs file:bg-white file:font-semibold hover:file:bg-gray-50 file:cursor-pointer disabled:opacity-50"
                         />
                     </div>
                 </div>
@@ -325,10 +363,8 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
                     />
                 </div>
 
-                {/* 실시간 피드백 예외 처리 라인 */}
                 {error && <p className="text-xs text-red-500 font-medium animate-in fade-in duration-150">⚠️ {error}</p>}
 
-                {/* 최종 회원가입 완료 버튼 (이메일 검증 전까지 누르지 못하도록 보안 락 유지) */}
                 <button
                     type="submit"
                     disabled={isLoading || !isEmailVerified}
