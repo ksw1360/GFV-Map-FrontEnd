@@ -100,9 +100,12 @@ export default function Header({ onLogout, onFilterChange }: HeaderProps) {
                         onChange={(e) => {
                             setKeyword(e.target.value);
                             notifyParentChange(selectedFilters, e.target.value, searchCategory);
+                            if (onFilterChange) {
+                                onFilterChange({ keyword: e.target.value, searchCategory: searchCategory });
+                            }
                         }}
                         onFocus={() => setIsFilterDropdownOpen(true)}
-                        placeholder="검색어를 입력하세요 (F-SEARCH-003)"
+                        placeholder="검색어를 입력하세요"
                         className="w-full px-4 h-10 text-sm focus:outline-none text-gray-800"
                     />
 

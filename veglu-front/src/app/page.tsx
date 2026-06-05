@@ -25,20 +25,33 @@ export default function MainPage() {
     const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
 
     // 헤더의 검색창/카테고리 값이 바뀔 때 작동할 비동기 네트워크 트래픽 핸들러
-    const handleHeaderFilter = async (filterData: any) => {
+    const handleHeaderFilter = async (filterData: { keyword: string; searchCategory: string }) => {
         try {
+            const accessToken = localStorage.getItem('accessToken');
+
             // GFV-Map_API명세서 상의 식당 검색 엔드포인트 연동
-            const response = await fetch(`http://192.168.7.120:5000/restaurant/search?keyword=${filterData.keyword}&searchCategory=${filterData.searchCategory}`);
+            const response = await fetch(
+                `http://192.168.7.120:5000/restaurant/search?keyword=${filterData.keyword || ''}&searchCategory=${filterData.searchCategory || 'store'}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 💡 [처방] 백엔드 시큐리티 장벽을 통과하기 위해 Bearer 토큰 주입!
+                        'Authorization': accessToken ? `Bearer ${accessToken}` : ''
+                    }
+                }
+            );
+
             if (response.ok) {
                 const data = await response.json();
-                setRestaurants(data); // 데이터 바인딩 ➔ 지도 마커와 사이드바 리스트 동시 자동 동기화!
+                setRestaurants(data);
             }
         } catch (err) {
-            console.error("식당 검색 조회 에러:", err);
+            console.error("식당 검색 조회 실패:", err);
         }
     };
 
-    // 💡 [원인 2 교정] 메인 본체 진입 시 혹은 로그인 직후 빈 화면 방지용 최초 1회 로드 함수
+    // 메인 본체 진입 시 혹은 로그인 직후 빈 화면 방지용 최초 1회 로드 함수
     const fetchInitialRestaurants = async () => {
         try {
             // 키워드가 없을 때 전체 혹은 기본 리스트를 리턴하는 엔드포인트 호출

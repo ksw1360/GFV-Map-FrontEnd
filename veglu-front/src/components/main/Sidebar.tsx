@@ -9,7 +9,6 @@ interface Restaurant {
     points: string;
     matchedMenus: string[];
     veganType: string;
-    rating?: number;
 }
 
 interface SidebarProps {
