@@ -45,35 +45,37 @@ export default function AddMenuModal({
                 <h2 className="text-base font-semibold text-gray-900 mb-5">메뉴 추가</h2>
 
                 <div className="flex flex-col gap-4">
-                    {/* 사진 첨부 */}
-                    <div>
-                        <label className="block cursor-pointer">
-                            <div className="w-full h-32 border border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 mb-2 overflow-hidden hover:bg-gray-100 transition-colors">
-                                {photoPreview ? (
-                                    <img src={photoPreview} alt="미리보기" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                                        <CameraIcon />
-                                        <p className="text-xs">사진 첨부</p>
-                                    </div>
-                                )}
-                            </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handlePhotoChange}
-                                className="hidden"
-                            />
-                        </label>
-                        {photoPreview && (
-                            <button
-                                onClick={() => { setPhotoFile(null); setPhotoPreview(''); }}
-                                className="text-xs text-red-400 hover:text-red-600"
-                            >
-                                사진 삭제
-                            </button>
-                        )}
-                    </div>
+                    {/* 사진 첨부 — 1:1 비율 */}
+                    <label style={{ display: 'block', position: 'relative', paddingBottom: '100%', cursor: 'pointer' }}>
+                        <div
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                borderRadius: '8px',
+                                border: '1.5px dashed #d1d5db',
+                                backgroundColor: '#f9fafb',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                            }}
+                        >
+                            {photoPreview ? (
+                                <img
+                                    src={photoPreview}
+                                    alt="미리보기"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                                />
+                            ) : (
+                                <>
+                                    <CameraIcon />
+                                    <span style={{ fontSize: '12px', color: '#9ca3af' }}>사진 첨부</span>
+                                </>
+                            )}
+                        </div>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                    </label>
 
                     {/* 메뉴 이름 */}
                     <div>

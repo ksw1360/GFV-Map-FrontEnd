@@ -29,87 +29,75 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
                     <h2 className="text-base font-semibold text-gray-900">사진</h2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-                    {/* 기존 사진들 */}
-                    {photos.map((photo, i) => (
-                        <div key={i} style={{ position: 'relative', paddingBottom: '100%' }}>
-                            <img
-                                src={photo.preview}
-                                alt={`사진 ${i + 1}`}
-                                style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    borderRadius: '8px',
-                                }}
-                            />
-                            <button
-                                onClick={() => handleDelete(i)}
-                                style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'rgba(0,0,0,0.5)',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    zIndex: 10,
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ))}
-
-                    {/* 추가 버튼 — 항상 표시 */}
-                    <label style={{ position: 'relative', paddingBottom: '100%', cursor: 'pointer' }}>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                borderRadius: '8px',
-                                border: '1.5px dashed #d1d5db',
-                                backgroundColor: '#f9fafb',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '4px',
-                            }}
-                        >
-                            <CameraIcon />
-                            <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-                {photos.length}장
-              </span>
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handlePhotoChange}
-                            className="hidden"
-                        />
-                    </label>
-                </div>
-
-                {photos.length === 0 && (
-                    <div className="flex flex-col items-center justify-center mt-16">
+                {photos.length === 0 ? (
+                    /* 빈 상태 — 사진 없을 때만 */
+                    <div className="flex flex-col items-center justify-center mt-16 gap-3">
                         <p className="text-sm text-gray-400">등록된 사진이 없습니다.</p>
+                        <label className="cursor-pointer">
+                            <span className="text-sm text-blue-500 underline">사진 추가하기</span>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
+                        </label>
+                    </div>
+                ) : (
+                    /* 사진 있을 때 — 그리드 */
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                        {photos.map((photo, i) => (
+                            <div key={i} style={{ position: 'relative', paddingBottom: '100%' }}>
+                                <img
+                                    src={photo.preview}
+                                    alt={`사진 ${i + 1}`}
+                                    style={{
+                                        position: 'absolute', inset: 0,
+                                        width: '100%', height: '100%',
+                                        objectFit: 'cover', borderRadius: '8px',
+                                    }}
+                                />
+                                <button
+                                    onClick={() => handleDelete(i)}
+                                    style={{
+                                        position: 'absolute', top: '4px', right: '4px',
+                                        width: '20px', height: '20px', borderRadius: '50%',
+                                        backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+                                        fontSize: '11px', display: 'flex',
+                                        alignItems: 'center', justifyContent: 'center',
+                                        border: 'none', cursor: 'pointer', zIndex: 10,
+                                    }}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        ))}
+
+                        {/* 추가 버튼 — 사진 있을 때만 그리드 끝에 */}
+                        <label style={{ position: 'relative', paddingBottom: '100%', cursor: 'pointer' }}>
+                            <div style={{
+                                position: 'absolute', inset: 0, borderRadius: '8px',
+                                border: '1.5px dashed #d1d5db', backgroundColor: '#f9fafb',
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center', gap: '4px',
+                            }}>
+                                <CameraIcon />
+                                <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+                                {photos.length}장
+                            </span>
+                            </div>
+                            <input
+                                type="file" accept="image/*" multiple
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
+                        </label>
                     </div>
                 )}
             </div>
         </div>
     );
-}
 
 function CameraIcon() {
     return (
@@ -118,4 +106,4 @@ function CameraIcon() {
             <circle cx="12" cy="13" r="4"/>
         </svg>
     );
-}
+}}
