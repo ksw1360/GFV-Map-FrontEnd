@@ -1,5 +1,5 @@
 // lib/api/owner.ts 파일 내부
-import { Store, Review, Menu } from '../../../../../../Users/tjoeun/Documents/카카오톡 받은 파일/veglufront-main/types/owner';
+import { Store, Review, Menu } from '../../types/owner';
 
 // 서버에서 가게 정보를 가져오는 함수
 export async function getStoreDetail(id: string): Promise<Store> {

@@ -12,7 +12,19 @@ export default function AddMenuModal({
 }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+<<<<<<< HEAD
     const [thumbnail, setThumbnail] = useState('');
+=======
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState('');
+
+    function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setPhotoFile(file);
+        setPhotoPreview(URL.createObjectURL(file));
+    }
+>>>>>>> teammate-repo/main
 
     function handleAdd() {
         if (!name.trim()) return;
@@ -20,7 +32,11 @@ export default function AddMenuModal({
             id: String(Date.now()),
             name,
             description,
+<<<<<<< HEAD
             thumbnail: thumbnail || 'https://via.placeholder.com/150',
+=======
+            thumbnail: photoPreview || 'https://via.placeholder.com/150',
+>>>>>>> teammate-repo/main
         });
         onClose();
     }
@@ -37,6 +53,7 @@ export default function AddMenuModal({
                 <h2 className="text-base font-semibold text-gray-900 mb-5">메뉴 추가</h2>
 
                 <div className="flex flex-col gap-4">
+<<<<<<< HEAD
                     {/* 이미지 링크 */}
                     <div>
                         <label className="text-xs text-gray-500 mb-1 block">이미지 URL</label>
@@ -57,6 +74,35 @@ export default function AddMenuModal({
                                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                 />
                             </div>
+=======
+                    {/* 사진 첨부 */}
+                    <div>
+                        <label className="block cursor-pointer">
+                            <div className="w-full h-32 border border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 mb-2 overflow-hidden hover:bg-gray-100 transition-colors">
+                                {photoPreview ? (
+                                    <img src={photoPreview} alt="미리보기" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                                        <CameraIcon />
+                                        <p className="text-xs">사진 첨부</p>
+                                    </div>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
+                        </label>
+                        {photoPreview && (
+                            <button
+                                onClick={() => { setPhotoFile(null); setPhotoPreview(''); }}
+                                className="text-xs text-red-400 hover:text-red-600"
+                            >
+                                사진 삭제
+                            </button>
+>>>>>>> teammate-repo/main
                         )}
                     </div>
 
@@ -103,4 +149,16 @@ export default function AddMenuModal({
             </div>
         </div>
     );
+<<<<<<< HEAD
+=======
+}
+
+function CameraIcon() {
+    return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+        </svg>
+    );
+>>>>>>> teammate-repo/main
 }

@@ -58,12 +58,22 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
                     localStorage.setItem('refreshToken', data.refreshToken);
                 }
 
+<<<<<<< HEAD
                 // 백엔드 응답이 { "accessToken": "...", "nickname": "내이름" } 구조일 때의 조치
                 const finalNickname = data.nickname || data.user?.nickname || '익명유저';
                 const finalAvatar = data.profileImageUrl || data.user?.profileImageUrl || 'default';
 
                 localStorage.setItem('user_nickname', finalNickname);
                 localStorage.setItem('user_avatar', finalAvatar);
+=======
+                // 💡 [임시 데이터 박멸] 백엔드 실물 DB 유저 데이터 매핑
+                // 백엔드가 내려주는 DTO 형태(철자)가 user.nickname 인지, profileImageUrl 인지
+                // 팀원분 자바 코드를 보고 최종 체크해 맞추시면 됩니다.
+                localStorage.setItem('user_nickname', data.user?.nickname || '익명유저');
+
+                // 유저가 사진을 등록 안 해서 null 이나 'default'가 오더라도 안전벨트 텍스트로 임시 수입
+                localStorage.setItem('user_avatar', data.user?.profileImageUrl || data.user?.avatar || 'default');
+>>>>>>> teammate-repo/main
             }
             // ──────────────────────────────────────────────────────────
 

@@ -6,18 +6,31 @@ import { useRouter } from 'next/navigation';
 export default function MyPageEdit() {
     const router = useRouter();
 
+<<<<<<< HEAD
     // 💡 [추가] Next.js SSR 뼈대 불일치(Hydration Mismatch) 방지 안전 마운트 스위치
     const [isMounted, setIsMounted] = useState(false);
 
+=======
+>>>>>>> teammate-repo/main
     // 1. 와이어프레임 우측: 레이어 모달 제어 트리거 스위치
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isEmojiListOpen, setIsEmojiListOpen] = useState(false); // Frame 13 리스트 창
 
+<<<<<<< HEAD
     // 2. 🎯 [실물 데이터 매핑] 초기값 가드 처리 후 useEffect에서 채워 넣기
     const [email, setEmail] = useState(''); // [로그인한 이메일] 상태 전환
     const [nickname, setNickname] = useState(''); // [닉네임]
     const [bio, setBio] = useState(''); // [자기소개]
     const [avatar, setAvatar] = useState('default'); // [프로필 이미지]
+=======
+    // 2. ★ 질문자님 선언 왼쪽 와이어프레임 3대 핵심 구성요소 상태값
+    const [email] = useState('vegan_user@domain.com'); // [로그인한 이메일] (수정불가)
+    const [nickname, setNickname] = useState('위치삼'); // [닉네임]
+    const [bio, setBio] = useState('사용자 자기소개 텍스트 폼입니다.'); // [자기소개]
+
+    // 3. 프로필 이미지 핵심 단일 타깃 상태
+    const [avatar, setAvatar] = useState('🥑');
+>>>>>>> teammate-repo/main
 
     // PC 파일 업로드 컴포넌트 제어용 리액트 훅
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +38,7 @@ export default function MyPageEdit() {
     // Frame 13: 비건과 관련된 이모티콘 리스트 후보군
     const veganEmojis = ['🥑', '🍞', '🥦', '🥕', '🍰', '🍪'];
 
+<<<<<<< HEAD
     // ──────────────────────────────────────────────────────────
     // 🔄 로그인 시 금고(localStorage)에 동기화해 둔 실제 유저 데이터 인계
     // ──────────────────────────────────────────────────────────
@@ -60,6 +74,18 @@ export default function MyPageEdit() {
         }
     }, []);
     // ──────────────────────────────────────────────────────────
+=======
+    // 로컬 저장소 값 동기화
+    useEffect(() => {
+        const savedNickname = localStorage.getItem('user_nickname');
+        const savedBio = localStorage.getItem('user_bio');
+        const savedAvatar = localStorage.getItem('user_avatar');
+
+        if (savedNickname) setNickname(savedNickname);
+        if (savedBio) setBio(savedBio);
+        if (savedAvatar) setAvatar(savedAvatar);
+    }, []);
+>>>>>>> teammate-repo/main
 
     // [기본 이미지 선택] 분기 처리
     const handleOpenEmojiList = () => {
@@ -91,16 +117,22 @@ export default function MyPageEdit() {
         }
     };
 
+<<<<<<< HEAD
     // ──────────────────────────────────────────────────────────
     // 🛠️ 하단 [수정/저장] 버튼 작동 핸들러 (실물 데이터 동기화 리팩터링)
     // ──────────────────────────────────────────────────────────
     const handleSaveSubmit = async (e: React.FormEvent) => {
+=======
+    // 하단 [수정/저장] 버튼 작동 핸들러
+    const handleSaveSubmit = (e: React.FormEvent) => {
+>>>>>>> teammate-repo/main
         e.preventDefault();
         if (!nickname.trim()) {
             alert('닉네임을 입력해 주세요!');
             return;
         }
 
+<<<<<<< HEAD
         try {
             // 💡 [선택 구현] 나중에 백엔드와 마이페이지 회원 정보 수정 API 연동 시 주석 해제하여 연동하세요.
             const accessToken = localStorage.getItem('accessToken');
@@ -140,6 +172,16 @@ export default function MyPageEdit() {
         return <div className="min-h-screen w-screen bg-gray-50 flex items-center justify-center p-6" />;
     }
 
+=======
+        localStorage.setItem('user_nickname', nickname);
+        localStorage.setItem('user_bio', bio);
+        localStorage.setItem('user_avatar', avatar);
+
+        alert('✅ 회원 정보 수정이 완료되었습니다.');
+        router.push('/mypage'); // 마이페이지 복귀
+    };
+
+>>>>>>> teammate-repo/main
     return (
         <div className="min-h-screen w-screen bg-gray-50 flex flex-col items-center justify-center p-6 select-none relative">
 
@@ -152,7 +194,13 @@ export default function MyPageEdit() {
                 className="hidden"
             />
 
+<<<<<<< HEAD
             {/* 왼쪽 와이어프레임 본체 카드 구역 */}
+=======
+            {/* ──────────────────────────────────────────────────────────
+          왼쪽 와이어프레임 본체 카드 구역
+          ────────────────────────────────────────────────────────── */}
+>>>>>>> teammate-repo/main
             <form
                 onSubmit={handleSaveSubmit}
                 className="w-full max-w-sm bg-white border border-gray-200 rounded-3xl shadow-xl p-8 space-y-5 relative animate-in fade-in duration-200"
@@ -168,9 +216,13 @@ export default function MyPageEdit() {
                         onClick={() => setIsAvatarModalOpen(true)}
                         className="w-24 h-24 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center overflow-hidden shadow-inner relative group hover:brightness-95 transition-all"
                     >
+<<<<<<< HEAD
                         {avatar === 'default' || !avatar ? (
                             <span className="text-4xl">🥑</span>
                         ) : avatar.startsWith('data:image') || avatar.startsWith('http') ? (
+=======
+                        {avatar.startsWith('data:image') ? (
+>>>>>>> teammate-repo/main
                             <img src={avatar} alt="업로드 이미지" className="w-full h-full object-cover" />
                         ) : (
                             <span className="text-4xl">{avatar}</span>
@@ -233,7 +285,13 @@ export default function MyPageEdit() {
                 </div>
             </form>
 
+<<<<<<< HEAD
             {/* 이미지 업로드 컴포넌트(모달) */}
+=======
+            {/* ──────────────────────────────────────────────────────────
+          중간 기획: 이미지 업로드 컴포넌트(모달)
+          ────────────────────────────────────────────────────────── */}
+>>>>>>> teammate-repo/main
             {isAvatarModalOpen && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-100">
                     <div className="w-full max-w-xs bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 space-y-4 relative text-center animate-in fade-in zoom-in-95 duration-100">
@@ -241,6 +299,10 @@ export default function MyPageEdit() {
                         <h3 className="text-xs font-bold text-gray-400 tracking-wider uppercase">이미지 업로드 컴포넌트(모달)</h3>
 
                         <div className="flex flex-col space-y-2 text-xs font-semibold pt-2">
+<<<<<<< HEAD
+=======
+                            {/* 기획안 동선 1: 기본 이미지 선택 */}
+>>>>>>> teammate-repo/main
                             <button
                                 type="button"
                                 onClick={handleOpenEmojiList}
@@ -249,6 +311,10 @@ export default function MyPageEdit() {
                                 기본 이미지 선택
                             </button>
 
+<<<<<<< HEAD
+=======
+                            {/* 기획안 동선 2: 파일 업로드 */}
+>>>>>>> teammate-repo/main
                             <button
                                 type="button"
                                 onClick={handleFileTrigger}
@@ -272,7 +338,13 @@ export default function MyPageEdit() {
                 </div>
             )}
 
+<<<<<<< HEAD
             {/* 우측 기획: Frame 13 비건과 관련된 이모티콘 리스트 창 */}
+=======
+            {/* ──────────────────────────────────────────────────────────
+          우측 기획: Frame 13 비건과 관련된 이모티콘 리스트 창
+          ────────────────────────────────────────────────────────── */}
+>>>>>>> teammate-repo/main
             {isEmojiListOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-100">
                     <div className="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-3 animate-in fade-in zoom-in-95 duration-100">

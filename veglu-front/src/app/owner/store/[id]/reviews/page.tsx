@@ -73,10 +73,17 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
     }
 
     return (
+<<<<<<< HEAD
         <div className="max-w-lg mx-auto">
             <StoreTabs storeId={id} />
 
             <div className="px-5 py-4">
+=======
+        <div className="max-w-lg mx-auto relative">
+            <StoreTabs storeId={id} />
+
+            <div className="px-5 py-4 flex flex-col">
+>>>>>>> teammate-repo/main
                 {/* 헤더 */}
                 <div className="relative flex items-center justify-between mb-4">
                     <h2 className="text-base font-semibold text-gray-900">
@@ -190,8 +197,13 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                 onChange={(e) => setReplyText(e.target.value)}
                 maxLength={500}
                 placeholder="내용을 입력하세요."
+<<<<<<< HEAD
                 className="flex-1 w-full text-sm text-gray-700 resize-none outline-none border border-gray-200 rounded-xl p-3 placeholder:text-gray-300"
                 rows={6}
+=======
+                style={{ height: '120px' }}
+                className="w-full text-sm text-gray-700 resize-none outline-none border border-gray-200 rounded-xl p-3 placeholder:text-gray-300"
+>>>>>>> teammate-repo/main
                 autoFocus
             />
                         <div className="flex justify-between items-center mt-2">

@@ -15,6 +15,20 @@ const DUMMY_REVIEWS: Review[] = [
         author: 'abcd1234',
         content: '매장 위생 상태도 썩 좋아 보이지 않았고 다시 방문하고 싶은 마음은 안 드네요.',
     },
+<<<<<<< HEAD
+=======
+    {
+        id: '3',
+        author: 'abcd1234',
+        content: '매장 위생 상태도 썩 좋아 보이지 않았고 다시 방문하고 싶은 마음은 안 드네요.',
+    },
+    {
+        id: '4',
+        author: 'abcd1234',
+        content: '매장 위생 상태도 썩 좋아 보이지 않았고 다시 방문하고 싶은 마음은 안 드네요.',
+    },
+
+>>>>>>> teammate-repo/main
 ];
 
 
