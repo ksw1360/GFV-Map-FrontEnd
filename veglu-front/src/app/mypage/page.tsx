@@ -7,16 +7,30 @@ export default function MyPage() {
     const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
     // 로컬 저장소 값 기반 동적 바인딩 상태
+    const [email, setEmail] = useState('수정불가');
     const [nickname, setNickname] = useState('위치삼');
     const [bio, setBio] = useState('여기는 사용자 자기소개 텍스트가 노출되거나 수정 입력되는 공간입니다.');
     const [avatar, setAvatar] = useState('🥑');
 
     // 저장소에 사용자가 수정한 커스텀 데이터가 있다면 동기화
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            console.log("💎 현재 브라우저 금고 실물 데이터 리스트:", {
+                email: localStorage.getItem('user_email'),
+                allKeys: Object.keys(localStorage)
+            });
+        }
+        const savedEmail = localStorage.getItem('user_email');
+        if (savedEmail && savedEmail !== 'undefined' && savedEmail !== 'null') {
+            setEmail(savedEmail);
+        } else {
+            setEmail('veglu@domain.com'); // 예외 처리 가드
+        }
         const savedNickname = localStorage.getItem('user_nickname');
         const savedBio = localStorage.getItem('user_bio');
         const savedAvatar = localStorage.getItem('user_avatar');
 
+        if (savedEmail) setEmail(savedEmail);
         if (savedNickname) setNickname(savedNickname);
         if (savedBio) setBio(savedBio);
         if (savedAvatar) setAvatar(savedAvatar);
@@ -70,8 +84,8 @@ export default function MyPage() {
                         )}
                     </div>
                     <div className="text-center">
-                        <h2 className="text-base font-bold text-gray-900">닉네임</h2>
-                        <p className="text-xs text-gray-500 font-semibold mt-0.5">{nickname}</p>
+                        <h2 className="text-base font-bold text-gray-900">{nickname}</h2>
+                        <p className="text-xs text-gray-500 font-semibold mt-0.5">{email}</p>
                     </div>
                 </div>
 

@@ -5,41 +5,61 @@ import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
     onLogout: () => void;
+    onFilterChange?: (filters: { searchCategory: string; keyword: string; selectedTags: string[] }) => void;
 }
 
-export default function Header({ onLogout }: HeaderProps) {
+export default function Header({ onLogout, onFilterChange }: HeaderProps) {
     const router = useRouter();
 
-    // 검색창 관련 상호작용 상태 기계
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     const [searchCategory, setSearchCategory] = useState('region');
+    const [keyword, setKeyword] = useState('');
     const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // ──────────────────────────────────────────────────────────
-    // 🥑 백엔드 DTO 필드명 명세(nickname, profileImageUrl) 싱크 조절
-    // ──────────────────────────────────────────────────────────
     const [nickname, setNickname] = useState('위치삼');
-    const [profileImageUrl, setProfileImageUrl] = useState('default'); // avatar 상태를 DTO 명세로 변경
+    const [profileImageUrl, setProfileImageUrl] = useState('default');
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         const savedNickname = localStorage.getItem('user_nickname');
-        const savedAvatar = localStorage.getItem('user_avatar'); // LoginForm이 금고에 넣은 값 꺼내기
+        const savedAvatar = localStorage.getItem('user_avatar');
 
         if (savedNickname) setNickname(savedNickname);
         if (savedAvatar) setProfileImageUrl(savedAvatar);
 
-        setIsMounted(true); // ◀ 화면 준비 완료 신호 켜기
+        setIsMounted(true);
     }, []);
-    // ──────────────────────────────────────────────────────────
+
+    // 💡 [개정] 타이핑할 때가 아니라 엔터나 버튼을 눌러 "확정"되었을 때만 부모를 깨우는 단일 컨트롤러
+    const submitSearch = (currentFilters = selectedFilters) => {
+        if (onFilterChange) {
+            onFilterChange({
+                searchCategory: searchCategory,
+                keyword: keyword.trim(),
+                selectedTags: currentFilters
+            });
+        }
+    };
+
+    // 엔터키 입력 감지기
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            setIsFilterDropdownOpen(false); // 검색 실행 시 필터창은 우아하게 닫아줍니다.
+            submitSearch();
+        }
+    };
 
     const handleFilterToggle = (filterName: string) => {
+        let nextFilters = [];
         if (selectedFilters.includes(filterName)) {
-            setSelectedFilters(selectedFilters.filter(item => item !== filterName));
+            nextFilters = selectedFilters.filter(item => item !== filterName);
         } else {
-            setSelectedFilters([...selectedFilters, filterName]);
+            nextFilters = [...selectedFilters, filterName];
         }
+        setSelectedFilters(nextFilters);
+        // 상세 배너 필터는 누르는 즉시 직관적으로 검색이 트리거되도록 처리
+        submitSearch(nextFilters);
     };
 
     useEffect(() => {
@@ -53,13 +73,12 @@ export default function Header({ onLogout }: HeaderProps) {
     }, []);
 
     if (!isMounted) {
-        // 마운트되기 전(서버 pre-rendering 단계)에는 빈 헤더 틀만 보여주어 꼬임을 원천 차단
         return <header className="h-16 border-b border-gray-200 bg-white" />;
     }
 
     return (
         <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 z-30 shadow-sm relative">
-            <div className="text-xl font-extrabold text-green-700 tracking-tight cursor-pointer flex-shrink-0">
+            <div className="text-xl font-extrabold text-green-700 tracking-tight cursor-pointer flex-shrink-0" onClick={() => window.location.href = '/'}>
                 VEGAN & GF MAP 🌱
             </div>
 
@@ -76,14 +95,23 @@ export default function Header({ onLogout }: HeaderProps) {
                         <option value="menu">메뉴명</option>
                     </select>
 
+                    {/* 💡 [교정 구역] onChange 시 무분별한 부모 호출을 제거하고, 엔터 전용 KeyDown 바인딩 */}
                     <input
                         type="text"
+                        value={keyword}
+                        onChange={(e) => setKeyword(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         onFocus={() => setIsFilterDropdownOpen(true)}
-                        placeholder="검색어를 입력하세요 (F-SEARCH-003)"
+                        placeholder="검색어를 입력하고 엔터를 누르세요"
                         className="w-full px-4 h-10 text-sm focus:outline-none text-gray-800"
                     />
 
-                    <button type="button" className="p-2.5 text-gray-400 hover:text-green-600 mr-1">
+                    {/* 💡 [교정 구역] 돋보기 버튼 클릭 시 정식으로 검색 집행 */}
+                    <button
+                        type="button"
+                        onClick={() => { setIsFilterDropdownOpen(false); submitSearch(); }}
+                        className="p-2.5 text-gray-400 hover:text-green-600 mr-1 active:scale-95 transition-transform"
+                    >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -131,39 +159,24 @@ export default function Header({ onLogout }: HeaderProps) {
                 )}
             </div>
 
-            {/* 우측 상단 유저 정보 및 마이페이지 내비게이션 바 링크 연동 */}
             <div className="flex items-center space-x-3 flex-shrink-0">
-
-                {/* 마이페이지 정보 요약 패널 버튼 */}
                 <button
                     type="button"
                     onClick={() => router.push('/mypage')}
                     className="flex items-center space-x-2 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-green-600/30 rounded-xl transition-all shadow-sm active:scale-[0.98] group"
                     title="마이페이지로 이동"
                 >
-                    {/* ──────────────────────────────────────────────────────────
-                       💡 [수정 구역] 백엔드 DTO 명세 양식에 맞춰 이미지 태그 수선
-                       'default' 이거나 null/빈 값일 경우 안전하게 아보카도 이모지 출력
-                       ────────────────────────────────────────────────────────── */}
                     <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center border border-gray-200 text-base overflow-hidden shadow-inner flex-shrink-0">
                         {profileImageUrl === 'default' || !profileImageUrl || profileImageUrl === 'null' ? (
                             '🥑'
                         ) : (
-                            <img
-                                src={profileImageUrl}
-                                alt="user-avatar"
-                                className="w-full h-full object-cover"
-                            />
+                            <img src={profileImageUrl} alt="user-avatar" className="w-full h-full object-cover" />
                         )}
                     </div>
-                    {/* ────────────────────────────────────────────────────────── */}
-
                     <span className="text-xs font-bold text-gray-700 group-hover:text-green-700 transition-colors">
                         {nickname}님 ⚙️
                     </span>
                 </button>
-
-                {/* 로그아웃 버튼 */}
                 <button
                     type="button"
                     onClick={onLogout}
@@ -171,7 +184,6 @@ export default function Header({ onLogout }: HeaderProps) {
                 >
                     로그아웃
                 </button>
-
             </div>
         </header>
     );

@@ -248,7 +248,6 @@ export default function MyPageEdit() {
                             >
                                 기본 이미지 선택
                             </button>
-
                             <button
                                 type="button"
                                 onClick={handleFileTrigger}

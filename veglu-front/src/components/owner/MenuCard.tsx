@@ -116,7 +116,15 @@ function EditMenuModal({
 }) {
     const [name, setName] = useState(menu.name);
     const [description, setDescription] = useState(menu.description);
-    const [thumbnail, setThumbnail] = useState(menu.thumbnail);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState(menu.thumbnail);
+
+    function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setPhotoFile(file);
+        setPhotoPreview(URL.createObjectURL(file));
+    }
 
     return (
         <div
@@ -130,25 +138,33 @@ function EditMenuModal({
                 <h2 className="text-base font-semibold text-gray-900 mb-5">메뉴 수정</h2>
 
                 <div className="flex flex-col gap-4">
-                    {/* 이미지 URL */}
+                    {/* 사진 첨부 */}
                     <div>
-                        <label className="text-xs text-gray-500 mb-1 block">이미지 URL</label>
-                        <input
-                            type="text"
-                            value={thumbnail}
-                            onChange={(e) => setThumbnail(e.target.value)}
-                            placeholder="https://..."
-                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl outline-none focus:border-green-500"
-                        />
-                        {thumbnail && (
-                            <div className="mt-2 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                                <img
-                                    src={thumbnail}
-                                    alt="미리보기"
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                />
+                        <label className="block cursor-pointer">
+                            <div className="w-full h-32 border border-gray-200 rounded-xl flex items-center justify-center bg-gray-50 mb-2 overflow-hidden hover:bg-gray-100 transition-colors">
+                                {photoPreview ? (
+                                    <img src={photoPreview} alt="미리보기" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                                        <CameraIcon />
+                                        <p className="text-xs">사진 첨부</p>
+                                    </div>
+                                )}
                             </div>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
+                        </label>
+                        {photoPreview && (
+                            <button
+                                onClick={() => { setPhotoFile(null); setPhotoPreview(''); }}
+                                className="text-xs text-red-400 hover:text-red-600"
+                            >
+                                사진 삭제
+                            </button>
                         )}
                     </div>
 
@@ -183,7 +199,7 @@ function EditMenuModal({
                         취소
                     </button>
                     <button
-                        onClick={() => onSave({ ...menu, name, description, thumbnail })}
+                        onClick={() => onSave({ ...menu, name, description, thumbnail: photoPreview })}
                         disabled={!name.trim()}
                         className="flex-1 py-2.5 text-sm font-medium text-white bg-green-700 rounded-xl hover:bg-green-800 disabled:opacity-40 transition-colors"
                     >
@@ -192,6 +208,15 @@ function EditMenuModal({
                 </div>
             </div>
         </div>
+    );
+}
+
+function CameraIcon() {
+    return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+        </svg>
     );
 }
 

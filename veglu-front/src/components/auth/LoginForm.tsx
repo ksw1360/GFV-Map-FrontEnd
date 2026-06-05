@@ -52,26 +52,54 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
             // 🔄 [리팩토링 반영] MainPage의 자동 로그인 레이어와 토큰 이름 동기화
             // ──────────────────────────────────────────────────────────
             if (data.accessToken) {
-                // MainPage가 읽어가는 이름인 'accessToken', 'refreshToken' 구조로 금고 고정
+                localStorage.setItem('user_email', data.email);
                 localStorage.setItem('accessToken', data.accessToken);
                 if (data.refreshToken) {
                     localStorage.setItem('refreshToken', data.refreshToken);
                 }
 
-                // 백엔드 응답이 { "accessToken": "...", "nickname": "내이름" } 구조일 때의 조치
                 const finalNickname = data.nickname || data.user?.nickname || '익명유저';
                 const finalAvatar = data.profileImageUrl || data.user?.profileImageUrl || 'default';
 
                 localStorage.setItem('user_nickname', finalNickname);
                 localStorage.setItem('user_avatar', finalAvatar);
+
+                // 💡 [추가] 사후 검증 및 권한 체킹을 위해 유저 역할을 금고에 기록합니다.
+                // 백엔드가 준 데이터 중 role 혹은 userRole 이라는 이름표를 조준합니다.
+                const userRole = data.role || data.user?.role || 'USER';
+                localStorage.setItem('user_role', userRole);
+
+                // 모달을 우아하게 닫아줍니다.
+                onClose();
+
+                // ──────────────────────────────────────────────────────────
+                // 🎯 [핵심 기믹] 권한(Role)에 따른 페이지 라우팅 분기 머신 격발
+                // ──────────────────────────────────────────────────────────
+                console.log(`🔑 로그인 성공 - 계정 권한 감지됨: ${userRole}`);
+
+                switch (userRole.toUpperCase()) {
+                    case 'OWNER':
+                        // 식당 사장님인 경우 점주 전용 관리 페이지나 매장 등록 대시보드로 리다이렉트
+                        console.log("🏪 점주 권한 분기 활성화 ➔ 점주 홈으로 워프");
+                        window.location.href = '/owner/dashboard';
+                        break;
+
+                    case 'ADMIN':
+                        // 전체 시스템 총괄 관리자인 경우 백오피스 관리자 대시보드로 리다이렉트
+                        console.log("🛡️ 관리자 권한 분기 활성화 ➔ 관리자 백오피스로 워프");
+                        window.location.href = '/admin/manage';
+                        break;
+
+                    case 'USER':
+                    default:
+                        // 일반 소비자나 기본 계정권한인 경우 우리가 완성한 안심 지도 메인 화면으로 리다이렉트
+                        console.log("🌱 일반 유저 권한 분기 활성화 ➔ 안심 지도 홈으로 워프");
+                        window.location.href = '/';
+                        break;
+                }
+                return; // 분기 주소 이동을 집행했으므로 연산 조기 종료
             }
             // ──────────────────────────────────────────────────────────
-
-            // ◀ 모달을 닫아준 직후, 지도가 있는 메인 홈('/')으로 즉시 내비게이션 이동
-            onClose();
-
-            // 💡 팁: 상태 세션 변화를 감지해 헤더나 사이드바 UI를 한 번에 새로고침 렌더링하려면
-            window.location.href = '/';
 
         } catch (err) {
             setError('서버 연결에 실패했습니다. 네트워크 상태를 확인해 주세요.');
