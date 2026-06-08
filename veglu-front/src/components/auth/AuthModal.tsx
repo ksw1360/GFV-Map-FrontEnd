@@ -11,9 +11,10 @@ export type AuthViewMode = 'LOGIN' | 'SIGNUP' | 'FIND_ID' | 'FIND_PW';
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onLoginSuccess: () => void;
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     const [viewMode, setViewMode] = useState<AuthViewMode>('LOGIN');
 
     if (!isOpen) return null;
@@ -22,7 +23,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const renderForm = () => {
         switch (viewMode) {
             case 'LOGIN':
-                return <LoginForm setViewMode={setViewMode} onClose={onClose} />;
+                return <LoginForm setViewMode={setViewMode} onClose={onClose} onLoginSuccess={onLoginSuccess}/>;
             case 'SIGNUP':
                 return <SignUpForm setViewMode={setViewMode} />;
             case 'FIND_ID':
@@ -30,7 +31,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             case 'FIND_PW':
                 return <FindAccountForm mode="PW" setViewMode={setViewMode} />;
             default:
-                return <LoginForm setViewMode={setViewMode} onClose={onClose}/>;
+                return <LoginForm setViewMode={setViewMode} onClose={onClose} onLoginSuccess={onLoginSuccess}/>;
         }
     };
 

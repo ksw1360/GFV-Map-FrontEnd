@@ -28,11 +28,13 @@ interface MenuSpec {
 interface RestaurantDetailSheetProps {
     restaurant: Restaurant | null;
     onClose: () => void;
+    isSidebarOpen: boolean;
 }
 
 type TabType = 'HOME' | 'MENU' | 'REVIEW' | 'PHOTO';
 
-export default function RestaurantDetailSheet({ restaurant, onClose }: RestaurantDetailSheetProps) {
+export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOpen }: RestaurantDetailSheetProps) {
+
     const [activeTab, setActiveTab] = useState<TabType>('HOME');
     const [shouldRender, setShouldRender] = useState(false);
     const [isAnimatingOut, setIsAnimatingOut] = useState(false);
@@ -112,7 +114,9 @@ export default function RestaurantDetailSheet({ restaurant, onClose }: Restauran
 
     return (
         <div
-            className={`absolute bottom-0 right-0 left-0 bg-white border-t border-gray-200 rounded-t-3xl shadow-[0_-15px_35px_rgba(0,0,0,0.1)] z-20 p-6 flex flex-col transition-all duration-300 ease-out h-[400px] ${
+            className={`fixed bottom-0 right-0 bg-white border-t border-gray-200 rounded-t-3xl shadow-[0_-15px_35px_rgba(0,0,0,0.1)] z-20 p-6 flex flex-col transition-all duration-300 ease-out h-[400px] ${
+                isSidebarOpen ? 'left-[360px]' : 'left-0'
+            } ${
                 isAnimatingOut ? 'transform translate-y-full opacity-0' : 'transform translate-y-0 opacity-100'
             }`}
         >

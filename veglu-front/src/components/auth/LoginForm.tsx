@@ -7,9 +7,10 @@ import SocialLogin from './SocialLogin';
 interface LoginFormProps {
     setViewMode: (mode: 'LOGIN' | 'SIGNUP' | 'FIND_ID' | 'FIND_PW') => void;
     onClose: () => void;
+    onLoginSuccess: () => void;
 }
 
-export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
+export default function LoginForm({ setViewMode, onClose, onLoginSuccess }: LoginFormProps) {
     const router = useRouter();
 
     const [email, setEmail] = useState('');
@@ -49,15 +50,23 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
             const data = await response.json();
 
             // ──────────────────────────────────────────────────────────
-            // 🔄 [리팩토링 반영] MainPage의 자동 로그인 레이어와 토큰 이름 동기화
+            // 🔄 [완벽 복구] 누락되었던 user_email 금고 저장 장치 재조립
             // ──────────────────────────────────────────────────────────
             if (data.accessToken) {
-                // MainPage가 읽어가는 이름인 'accessToken', 'refreshToken' 구조로 금고 고정
+                // 💡 [3중 멀티 안전 가드]
+                // 1. 백엔드가 최상단에 이메일을 주었을 때 (data.email)
+                // 2. 혹은 user 객체 안에 감싸 주었을 때 (data.user?.email)
+                // 3. 그것도 아니면 현재 유저가 이 인풋창에 직접 타이핑한 원본 상태값 (email)을 강제로 징집!
+                const finalSaveEmail = data.email || data.user?.email || email || 'veglu@domain.com';
+
+                // 🎯 제가 날려 먹었던 범인인 이메일 금고 보관 코드를 다시 굳건히 심어줍니다.
+                localStorage.setItem('user_email', finalSaveEmail);
+
                 localStorage.setItem('accessToken', data.accessToken);
                 if (data.refreshToken) {
                     localStorage.setItem('refreshToken', data.refreshToken);
                 }
-                // 백엔드 응답이 { "accessToken": "...", "nickname": "내이름" } 구조일 때의 조치
+
                 const finalNickname = data.nickname || data.user?.nickname || '익명유저';
                 const finalAvatar = data.profileImageUrl || data.user?.profileImageUrl || 'default';
 
@@ -66,10 +75,10 @@ export default function LoginForm({ setViewMode, onClose }: LoginFormProps) {
             }
             // ──────────────────────────────────────────────────────────
 
-            // ◀ 모달을 닫아준 직후, 지도가 있는 메인 홈('/')으로 즉시 내비게이션 이동
-            onClose();
+            if (onLoginSuccess) {
+                onLoginSuccess();
+            }
 
-            // 💡 팁: 상태 세션 변화를 감지해 헤더나 사이드바 UI를 한 번에 새로고침 렌더링하려면
             window.location.href = '/';
 
         } catch (err) {

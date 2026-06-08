@@ -21,12 +21,10 @@ export default function MainPage() {
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // ──────────────────────────────────────────────────────────
-    // 💡 [우회 핵심] 백엔드 버그 방어를 위한 원본 보관소 분리 선언
-    // ──────────────────────────────────────────────────────────
     const [allRestaurants, setAllRestaurants] = useState<Restaurant[]>([]); // 전체 데이터 백업본
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);    // 화면(지도/사이드바)에 뿌려질 최종본
     const [selectedShopIndex, setSelectedShopIndex] = useState<number | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // 헤더에서 검색 확정 시 작동하는 비동기 통신 및 프론트 오버라이딩 엔진
     const handleHeaderFilter = async (filterData: any) => {
@@ -35,7 +33,6 @@ export default function MainPage() {
         const currentCategory = filterData.searchCategory; // 'region', 'store', 'menu'
         const currentKeyword = (filterData.keyword || '').trim(); // 공백 제거
 
-        // 🎯 [프론트 우회 락 해제 1] 검색어가 비어있다면 백엔드에 찌르지 않고 원본 백업본을 그대로 복구합니다!
         if (currentKeyword === '') {
             console.log("💡 검색어가 비어있어 백엔드 요청을 생략하고 프론트 원본 데이터로 복원합니다.");
             setRestaurants(allRestaurants);
@@ -75,9 +72,6 @@ export default function MainPage() {
         }
     };
 
-    // ──────────────────────────────────────────────────────────
-    // 🎯 [우회 핵심] 처음 화면이 켜질 때 DB에 존재하는 데이터를 '확실한 키워드'로 강제 수집
-    // ──────────────────────────────────────────────────────────
     const fetchInitialRestaurants = async () => {
         try {
             const accessToken = localStorage.getItem('accessToken');
@@ -151,6 +145,10 @@ export default function MainPage() {
 
     const handleModalClose = () => {
         setIsAuthOpen(false);
+    };
+
+    const handleLoginSuccess = () => {
+        setIsAuthOpen(false);
         setIsLoggedIn(true);
         fetchInitialRestaurants();
     };
@@ -193,40 +191,41 @@ export default function MainPage() {
                 <div className="h-screen w-screen flex flex-col bg-white overflow-hidden">
                     <Header onLogout={handleLogout} onFilterChange={handleHeaderFilter} />
 
-                    {/* 메인 작업 대지 뷰포트 크기 강제 홀딩 */}
-                    <div className="relative w-full h-[calc(100vh-64px)] flex overflow-hidden">
+                    {/* 메인 뷰포트 무대 */}
+                    <div className="relative w-full h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
 
-                        {/* 1. 왼쪽 구역: 사이드바 독립 배치 (자체 레이아웃 및 마운트 독립) */}
-                        <div className="h-full z-10 flex-shrink-0">
-                            <Sidebar
-                                restaurants={restaurants}
-                                selectedIndex={selectedShopIndex}
-                                onShopSelect={(index) => setSelectedShopIndex(index)}
-                            />
-                        </div>
+                        {/* 1. 카카오 지도 레이어 (화면 전체 100% 가득 안착) */}
+                        <MapContainer
+                            restaurants={restaurants}
+                            selectedIndex={selectedShopIndex}
+                            onMarkerSelect={(index) => setSelectedShopIndex(index)}
+                        />
 
-                        {/* 2. 오른쪽 구역: 지도 본체 및 바텀시트가 머무를 전용 무대 설정 */}
-                        <div className="relative flex-1 h-full overflow-hidden">
+                        {/* 2. 공중부양 오버레이 사이드바 (z-10)
+                   - 내부의 isOpen 스위치와 상태 세터를 부모 전역 센서인 isSidebarOpen 링크와 직결시킵니다. */}
+                        <Sidebar
+                            restaurants={restaurants}
+                            selectedIndex={selectedShopIndex}
+                            onShopSelect={(index) => setSelectedShopIndex(index)}
+                            isOpenProps={isSidebarOpen} // 💡 Sidebar.tsx 내부 useState(true) 대신 부모가 컨트롤하도록 전달 가능
+                            onToggleSidebar={(open) => setIsSidebarOpen(open)} // 💡 토글 알림방
+                        />
 
-                            {/* 카카오 지도 레이어 */}
-                            <MapContainer
-                                restaurants={restaurants}
-                                selectedIndex={selectedShopIndex}
-                            />
+                        <RestaurantDetailSheet
+                            restaurant={selectedShopIndex !== null ? restaurants[selectedShopIndex] : null}
+                            onClose={() => setSelectedShopIndex(null)}
+                            isSidebarOpen={isSidebarOpen} // 💡 링커 결속 완료!
+                        />
 
-                            {/* 🎯 [신규 장착] 와이어프레임 기획안의 실물 바텀시트 패널 주입! */}
-                            {/* selectedShopIndex가 null이 아닐 때만 슥 올라오며, 지도의 최하단을 살짝 덮어 가립니다. */}
-                            <RestaurantDetailSheet
-                                restaurant={selectedShopIndex !== null ? restaurants[selectedShopIndex] : null}
-                                onClose={() => setSelectedShopIndex(null)} // ✕를 누르면 깔끔하게 초점 상태 초기화
-                            />
-
-                        </div>
                     </div>
                 </div>
             )}
 
-            <AuthModal isOpen={isAuthOpen} onClose={handleModalClose} />
+            <AuthModal
+                isOpen={isAuthOpen}
+                onClose={handleModalClose}
+                onLoginSuccess={handleLoginSuccess}
+            />
         </>
     );
 }

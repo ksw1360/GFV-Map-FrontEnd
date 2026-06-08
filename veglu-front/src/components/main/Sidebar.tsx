@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Restaurant {
     restaurantId: number;
@@ -14,12 +14,19 @@ interface Restaurant {
 
 interface SidebarProps {
     restaurants: Restaurant[];
-    selectedIndex: number | null; // 💡 id 대신 index 수입
-    onShopSelect: (index: number) => void; // 💡 index 슛
+    selectedIndex: number | null;
+    onShopSelect: (index: number) => void;
+    isOpenProps: boolean; // 💡 부모에게 사이드바 상태 전역 수입
+    onToggleSidebar: (open: boolean) => void; // 💡 상태가 바뀔 때 부모에게 보고할 콜백 통로
 }
 
-export default function Sidebar({ restaurants, selectedIndex, onShopSelect }: SidebarProps) {
-    const [isOpen, setIsOpen] = useState(true);
+export default function Sidebar({
+                                    restaurants,
+                                    selectedIndex,
+                                    onShopSelect,
+                                    isOpenProps,
+                                    onToggleSidebar
+                                }: SidebarProps) {
     const [sortRule, setSortRule] = useState('distance');
 
     const processedList = [...restaurants].sort((a, b) => {
@@ -29,24 +36,38 @@ export default function Sidebar({ restaurants, selectedIndex, onShopSelect }: Si
         return a.restaurantId - b.restaurantId;
     });
 
-    return (
-        <div className="relative flex h-full z-10 pointer-events-none">
-            <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-300 pointer-events-auto ${isOpen ? 'w-[360px]' : 'w-0 overflow-hidden border-r-0'}`}>
+    // 💡 접기/펴기 버튼을 누를 때, 내 내부 상태만 바꾸는 게 아니라 부모 타워의 센서까지 즉시 동기화 제어합니다.
+    const handleToggleClick = () => {
+        const nextState = !isOpenProps;
+        onToggleSidebar(nextState);
+    };
 
-                <div className="p-4 border-b border-gray-100">
+    return (
+        /* 전체 오버레이 absolute 컨테이너 (지도 클릭 관통 허용) */
+        <div className="absolute inset-y-0 left-0 flex h-full z-10 pointer-events-none">
+
+            {/* 사이드바 본체 패널 (isOpenProps 스위치에 따라 300ms 슬라이딩) */}
+            <div
+                className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-300 pointer-events-auto shadow-2xl flex-shrink-0 ${
+                    isOpenProps
+                        ? 'w-[360px] translate-x-0'
+                        : 'w-[360px] -translate-x-full overflow-hidden border-r-0'
+                }`}
+            >
+                {/* 상단 정렬 바 */}
+                <div className="p-4 border-b border-gray-100 flex-shrink-0">
                     <select value={sortRule} onChange={(e) => setSortRule(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 focus:outline-none cursor-pointer">
                         <option value="distance">거리순 정렬 (F-SEARCH-003)</option>
                         <option value="rating">평점순 정렬</option>
                     </select>
                 </div>
 
+                {/* 식당 카드 리스트 영역 */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {processedList.map((shop, index) => (
                         <div
                             key={`sidebar-shop-${shop.restaurantId}-${index}`}
-                            // 🎯 [교정] shop.restaurantId 대신 순수한 내 배열 번호 index를 위로 쏩니다!
                             onClick={() => onShopSelect(index)}
-                            // 🎯 [교정] 0 === 0 함정을 파괴하고 내 칸만 정확히 초록 불이 켜지게 차단!
                             className={`p-4 border rounded-2xl bg-white transition-all cursor-pointer hover:border-green-600 hover:shadow-sm ${
                                 selectedIndex === index
                                     ? 'border-green-600 ring-2 ring-green-600/10 bg-green-50/20'
@@ -74,9 +95,20 @@ export default function Sidebar({ restaurants, selectedIndex, onShopSelect }: Si
                 </div>
             </div>
 
-            <div className="flex items-center h-full pointer-events-auto">
-                <button onClick={() => setIsOpen(!isOpen)} className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 p-2 rounded-r-xl shadow-md transition-all -ml-[1px]">
-                    {isOpen ? '◀' : '▶'}
+            <div
+                className={`flex items-center h-full pointer-events-auto flex-shrink-0 transition-all duration-300 ease-out ${
+                    isOpenProps
+                        ? 'transform translate-x-0'
+                        : 'transform -translate-x-[360px]'
+                }`}
+            >
+                <button
+                    type="button"
+                    onClick={handleToggleClick} // 💡 위에서 선언한 연동 제어 함수 호출
+                    className="bg-white border border-gray-200 border-l-0 hover:bg-gray-50 text-gray-600 p-2 rounded-r-xl shadow-md transition-all -ml-[1px] h-14 flex items-center justify-center font-bold text-sm z-30"
+                    title={isOpenProps ? '사이드바 접기' : '사이드바 열기'}
+                >
+                    {isOpenProps ? '◀' : '▶'}
                 </button>
             </div>
         </div>
