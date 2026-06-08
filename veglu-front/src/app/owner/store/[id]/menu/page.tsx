@@ -1,29 +1,55 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import StoreTabs from '@/components/owner/StoreTabs';
 import MenuCard, { Menu } from '@/components/owner/MenuCard';
 import AddMenuModal from '@/components/owner/AddMenuModal';
-
-const initialMenus: Menu[] = [
-    {
-        id: '1',
-        name: '두부아보카도샐러드',
-        description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.',
-        thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg',
-    },
-    {
-        id: '2',
-        name: '시저샐러드',
-        description: '신선한 채소와 치즈를 곁들인 클래식 시저샐러드입니다.',
-        thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg',
-    },
-];
+import { getMenus, deleteMenu, updateMenu } from '@/libs/api/restaurant';
 
 export default function MenuPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const [menus, setMenus] = useState(initialMenus);
+    const [menus, setMenus] = useState<Menu[]>([]);
+    const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
+
+    type MenuApiResponse = {
+        menuId: number;
+        name: string;
+        description?: string;
+        imageUrl?: string;
+    };
+
+    type Menu = {
+        id: string; // UI용 통일 ID
+        restaurantId: number;
+        name: string;
+        description: string;
+        thumbnail: string;
+    };
+
+    useEffect(() => {
+        getMenus(Number(id))
+            .then((data) =>
+                setMenus(
+                    data.map((m: MenuApiResponse) => ({
+                        id: String(m.menuId),   // ✅ 여기 핵심
+                        restaurantId: Number(id),
+                        name: m.name,
+                        description: m.description ?? '',
+                        thumbnail: m.imageUrl ?? '',
+                    }))
+                )
+            )
+            .catch((e) => console.error('메뉴 불러오기 실패', e))
+            .finally(() => setLoading(false));
+    }, [id]);
+
+    if (loading) return (
+        <div className="max-w-lg mx-auto">
+            <StoreTabs storeId={id} />
+            <p className="text-center text-sm text-gray-400 py-10">로딩 중...</p>
+        </div>
+    );
 
     return (
         <div className="max-w-lg mx-auto">
@@ -43,10 +69,30 @@ export default function MenuPage({ params }: { params: Promise<{ id: string }> }
                 <ul className="flex flex-col divide-y divide-gray-100">
                     {menus.map((menu) => (
                         <MenuCard
-                            key={menu.id}
+                            key={menu.id}   // 이제 안전 (String(menuId))
                             menu={menu}
-                            onDelete={(id) => setMenus((prev) => prev.filter((m) => m.id !== id))}
-                            onEdit={(updatedMenu) => setMenus((prev) => prev.map((m) => m.id === updatedMenu.id ? updatedMenu : m))}
+                            onDelete={async (menuId) => {
+                                console.log('삭제 시도 menuId:', menuId); // 여기서 값 확인
+                                try {
+                                    await deleteMenu(Number(menuId));
+                                    setMenus((prev) => prev.filter((m) => m.id !== String(menuId)));
+                                } catch (e) {
+                                    console.error('메뉴 삭제 실패', e);
+                                }
+                            }}
+                            onEdit={async (updatedMenu) => {
+                                const saved = await updateMenu(Number(updatedMenu.id), {
+                                    name: updatedMenu.name,
+                                    description: updatedMenu.description,
+                                    imageUrl: updatedMenu.thumbnail,
+                                });
+                                setMenus((prev) => prev.map((m) => m.id === updatedMenu.id ? {
+                                    ...m,
+                                    name: saved.name,
+                                    description: saved.description,
+                                    thumbnail: saved.imageUrl ?? '',
+                                } : m));
+                            }}
                         />
                     ))}
                 </ul>
@@ -54,6 +100,7 @@ export default function MenuPage({ params }: { params: Promise<{ id: string }> }
 
             {showAddModal && (
                 <AddMenuModal
+                    restaurantId={Number(id)}
                     onClose={() => setShowAddModal(false)}
                     onAdd={(newMenu) => setMenus((prev) => [...prev, newMenu])}
                 />

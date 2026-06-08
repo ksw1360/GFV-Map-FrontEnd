@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export type Menu = {
     id: string;
+    restaurantId: number;
     name: string;
     description: string;
     thumbnail: string;
@@ -24,7 +25,13 @@ export default function MenuCard({ menu, onDelete, onEdit }: Props) {
         <>
             <li className="flex gap-4 py-4 relative">
                 <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                    <img src={menu.thumbnail} alt={menu.name} className="w-full h-full object-cover" />
+                    {menu.thumbnail ? (
+                        <img src={menu.thumbnail} alt={menu.name} className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                            이미지 없음
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 min-w-0">

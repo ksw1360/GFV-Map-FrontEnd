@@ -171,7 +171,6 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
                                     </button>
                                     {isMenuOpen && (
                                         <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-                                            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">수정요구</button>
                                             <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">삭제</button>
                                         </div>
                                     )}

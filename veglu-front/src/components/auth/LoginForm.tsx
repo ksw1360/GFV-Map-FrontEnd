@@ -79,7 +79,14 @@ export default function LoginForm({ setViewMode, onClose, onLoginSuccess }: Logi
                 onLoginSuccess();
             }
 
-            window.location.href = '/';
+            const role = data.role;
+            if (role === 'OWNER') {
+                window.location.href = '/owner/dashboard';
+            } else if (role === 'ADMIN') {
+                window.location.href = '/admin';
+            } else {
+                window.location.href = '/';
+            }
 
         } catch (err) {
             setError('서버 연결에 실패했습니다. 네트워크 상태를 확인해 주세요.');

@@ -1,30 +1,22 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, use, useEffect } from 'react';
 import StoreTabs from '@/components/owner/StoreTabs';
 import EditStoreModal from '@/components/owner/EditStoreModal';
+import { getRestaurant, updateRestaurant } from '@/libs/api/restaurant';
 
-const STORES_DB = [
-    {
-        id: '1',
-        name: '낭만모로코',
-        rating: 4.7,
-        hours: '10:00 - 22:00',
-        breakTime: '15:00 - 17:00',
-        phone: '02-123-4567',
-        address: '서울특별시 관악구 관악로14길 88',
-        thumbnail:
-            'https://i.pinimg.com/736x/bf/c5/64/bfc56449fe1871d5cf1afacfdac52456.jpg',
-    },
-];
+type Store = {
+    id: string;
+    name: string;
+    rating: number;
+    hours: string;
+    breakTime: string;
+    phone: string;
+    address: string;
+    thumbnail: string;
+};
 
-function InfoRow({
-                     label,
-                     value,
-                 }: {
-    label: string;
-    value: string;
-}) {
+function InfoRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex gap-2 text-xs text-gray-600">
             {label && (
@@ -39,40 +31,44 @@ function InfoRow({
 
 function StarIcon() {
     return (
-        <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="#f5a623"
-            stroke="none"
-        >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#f5a623" stroke="none">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
     );
 }
 
-export default function StoreHomePage({
-                                          params,
-                                      }: {
-    params: Promise<{ id: string }>;
-}) {
+export default function StoreHomePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-
+    const [store, setStore] = useState<Store | null>(null);
+    const [loading, setLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    const initialStore = STORES_DB.find((s) => s.id === id);
+    useEffect(() => {
+        getRestaurant(Number(id))
+            .then((data) => setStore({
+                id: String(data.restaurantId),
+                name: data.name,
+                rating: data.avgRating ?? 0,
+                hours: data.businessHours ? Object.values(data.businessHours)[0] as string : '',
+                breakTime: '',
+                phone: data.phone ?? '',
+                address: data.address ?? '',
+                thumbnail: '',
+            }))
+            .catch((e) => console.error('가게 정보 불러오기 실패', e))
+            .finally(() => setLoading(false));
+    }, [id]);
 
-    const [store, setStore] = useState(
-        initialStore ?? STORES_DB[0]
+    if (loading) return (
+        <div className="max-w-lg mx-auto">
+            <StoreTabs storeId={id} />
+            <p className="text-center text-sm text-gray-400 py-10">로딩 중...</p>
+        </div>
     );
 
-    if (!initialStore) {
-        return (
-            <div className="p-10 text-center">
-                가게 정보를 찾을 수 없습니다.
-            </div>
-        );
-    }
+    if (!store) return (
+        <div className="p-10 text-center">가게 정보를 찾을 수 없습니다.</div>
+    );
 
     return (
         <div className="max-w-lg mx-auto">
@@ -81,54 +77,29 @@ export default function StoreHomePage({
             <div className="px-5 py-5">
                 <div className="flex gap-4">
                     <div className="w-28 h-28 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-                        <img
-                            src={store.thumbnail}
-                            alt={store.name}
-                            className="w-full h-full object-cover"
-                        />
+                        {store.thumbnail && (
+                            <img src={store.thumbnail} alt={store.name} className="w-full h-full object-cover" />
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-1 flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <h1 className="text-lg font-semibold text-gray-900">
-                                {store.name}
-                            </h1>
-
+                            <h1 className="text-lg font-semibold text-gray-900">{store.name}</h1>
                             <span className="flex items-center gap-1 text-sm text-gray-500">
                                 <StarIcon />
                                 {store.rating}
                             </span>
-
                             <button
-                                onClick={() =>
-                                    setIsEditModalOpen(true)
-                                }
+                                onClick={() => setIsEditModalOpen(true)}
                                 className="text-sm text-green-600 underline underline-offset-2"
                             >
                                 수정하기
                             </button>
                         </div>
-
-                        <InfoRow
-                            label="영업"
-                            value={store.hours}
-                        />
-
-                        <InfoRow
-                            label="브레이크타임"
-                            value={store.breakTime}
-                        />
-
-                        <InfoRow
-                            label="전화"
-                            value={store.phone}
-                        />
-
-                        <InfoRow
-                            label="위치"
-                            value={store.address}
-                        />
-
+                        <InfoRow label="영업" value={store.hours} />
+                        <InfoRow label="브레이크타임" value={store.breakTime} />
+                        <InfoRow label="전화" value={store.phone} />
+                        <InfoRow label="위치" value={store.address} />
                     </div>
                 </div>
             </div>
@@ -136,15 +107,14 @@ export default function StoreHomePage({
             {isEditModalOpen && (
                 <EditStoreModal
                     store={store}
-                    onClose={() =>
-                        setIsEditModalOpen(false)
-                    }
-                    onSave={(updatedStore) => {
-                        setStore({
-                            ...store,
-                            ...updatedStore,
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSave={async (updatedStore) => {
+                        await updateRestaurant(Number(id), {
+                            name: updatedStore.name,
+                            phone: updatedStore.phone,
+                            address: updatedStore.address,
                         });
-
+                        setStore((prev) => prev ? { ...prev, ...updatedStore } : prev);
                         setIsEditModalOpen(false);
                     }}
                 />
