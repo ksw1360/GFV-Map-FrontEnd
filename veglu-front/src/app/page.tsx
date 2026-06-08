@@ -216,6 +216,7 @@ export default function MainPage() {
                             <MapContainer
                                 restaurants={restaurants}
                                 selectedIndex={selectedShopIndex}
+                                onMarkerSelect={(index) => setSelectedShopIndex(index)}
                             />
 
                             {/* 🎯 [신규 장착] 와이어프레임 기획안의 실물 바텀시트 패널 주입! */}
