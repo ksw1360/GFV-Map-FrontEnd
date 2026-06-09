@@ -1,41 +1,42 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import StoreListCard from '@/components/admin/StoreListCard';
-
-const DUMMY_STORES = [
-    {
-        id: '1',
-        name: '낭만모로코',
-        thumbnail: 'https://i.pinimg.com/736x/bf/c5/64/bfc56449fe1871d5cf1afacfdac52456.jpg',
-        registeredAt: '2026.05.29',
-        address: '위치: 서울특별시 관악구 관악로14길 88',
-        description: '주요 메뉴: 카프레제 샐러드, 쿠스쿠스 샐러드 등',
-    },
-    {
-        id: '2',
-        name: '낭만모로코',
-        thumbnail: 'https://i.pinimg.com/736x/bf/c5/64/bfc56449fe1871d5cf1afacfdac52456.jpg',
-        registeredAt: '2026.05.29',
-        address: '위치: 서울특별시 관악구 관악로14길 88',
-        description: '주요 메뉴: 카프레제 샐러드, 쿠스쿠스 샐러드 등',
-    },
-    {
-        id: '3',
-        name: '세인트마리',
-        thumbnail: 'https://i.pinimg.com/736x/bf/c5/64/bfc56449fe1871d5cf1afacfdac52456.jpg',
-        registeredAt: '2026.05.29',
-        address: '위치: 서울특별시 관악구 관악로14길 88',
-        description: '주요 메뉴: 카프레제 샐러드, 쿠스쿠스 샐러드 등',
-    },
-];
+import { useEffect, useState, useMemo } from 'react'
+import type { RestaurantResponseDto } from '@/types/restaurant'
+import { getRestaurantList } from '@/libs/restaurantApi'
+import StoreListCard from '@/components/admin/StoreListCard'
 
 export default function StoresPage() {
-    const [search, setSearch] = useState('');
+    const [allStores, setAllStores] = useState<RestaurantResponseDto[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [input, setInput] = useState('')
 
-    const filtered = DUMMY_STORES.filter((store) =>
-        store.name.toLowerCase().includes(search.toLowerCase())
-    );
+    useEffect(() => {
+        const fetchAll = async () => {
+            setLoading(true)
+            setError(null)
+            try {
+                const data = await getRestaurantList(undefined)
+                setAllStores(data)
+            } catch {
+                setError('가게 목록을 불러오지 못했습니다.')
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchAll()
+    }, [])
+
+    const stores = useMemo(() => {
+        if (!input.trim()) return allStores
+        return allStores.filter((s) =>
+            s.name.toLowerCase().includes(input.toLowerCase())
+        )
+    }, [input, allStores])
+
+    function handleClear() {
+        setInput('')
+    }
 
     return (
         <div className="max-w-lg mx-auto px-5 py-6">
@@ -44,32 +45,47 @@ export default function StoresPage() {
                 <SearchIcon />
                 <input
                     type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
                     placeholder="가게 이름 검색"
                     className="flex-1 text-sm outline-none placeholder:text-gray-300"
                 />
-                {search && (
-                    <button onClick={() => setSearch('')} className="text-gray-300 hover:text-gray-500">
+                {input && (
+                    <button onClick={handleClear} className="text-gray-300 hover:text-gray-500">
                         <ClearIcon />
                     </button>
                 )}
             </div>
 
-            {/* 가게 목록 */}
-            <ul className="flex flex-col gap-3">
-                {filtered.length > 0 ? (
-                    filtered.map((store) => (
-                        <li key={store.id}>
-                            <StoreListCard store={store} />
-                        </li>
-                    ))
-                ) : (
-                    <p className="text-sm text-gray-400 text-center py-10">검색 결과가 없습니다.</p>
-                )}
-            </ul>
+            {loading && (
+                <div className="flex flex-col gap-3">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="bg-gray-100 animate-pulse rounded-xl h-24" />
+                    ))}
+                </div>
+            )}
+
+            {!loading && error && (
+                <div className="text-center py-10 text-red-500 text-sm">{error}</div>
+            )}
+
+            {!loading && !error && (
+                <ul className="flex flex-col gap-3">
+                    {stores.length > 0 ? (
+                        stores.map((store, i) => (
+                            <li key={`${store.name}-${i}`}>
+                                <StoreListCard store={store} index={i + 1} />
+                            </li>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-400 text-center py-10">
+                            {input ? '검색 결과가 없습니다.' : '등록된 가게가 없습니다.'}
+                        </p>
+                    )}
+                </ul>
+            )}
         </div>
-    );
+    )
 }
 
 function SearchIcon() {
@@ -77,7 +93,7 @@ function SearchIcon() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-    );
+    )
 }
 
 function ClearIcon() {
@@ -85,5 +101,5 @@ function ClearIcon() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
-    );
+    )
 }
