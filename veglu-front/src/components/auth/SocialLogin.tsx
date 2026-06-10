@@ -111,6 +111,7 @@ export default function SocialLogin() {
     // 프론트엔드 자신의 도메인 주소 (콘솔 설정에 등록된 Callback URL 주소)
     const FRONTEND_URL = 'http://localhost:3000';
 
+    console.log("테스트용 로그 123");
     // 🟡 카카오 상숫값 정의
     const KAKAO_CLIENT_ID = '5cbb4b90ecb89c2feefea4ade7ed1db0';
     const KAKAO_REDIRECT_URI = `${FRONTEND_URL}/auth/kakao/callback`;

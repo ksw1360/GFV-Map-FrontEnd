@@ -18,6 +18,8 @@ export default function LoginForm({ setViewMode, onClose, onLoginSuccess }: Logi
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    console.log("테스트용 로그 123");
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
