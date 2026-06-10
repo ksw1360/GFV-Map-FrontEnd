@@ -83,7 +83,7 @@ export default function LoginForm({ setViewMode, onClose, onLoginSuccess }: Logi
             if (role === 'OWNER') {
                 window.location.href = '/owner/dashboard';
             } else if (role === 'ADMIN') {
-                window.location.href = '/admin';
+                window.location.href = '/admin/users';
             } else {
                 window.location.href = '/';
             }

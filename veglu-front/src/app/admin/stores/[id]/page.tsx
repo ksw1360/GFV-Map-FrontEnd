@@ -1,37 +1,48 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {use, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
+import { getRestaurant, getMenus } from '@/libs/api/restaurant';
+import { getReviewsByRestaurant } from '@/libs/api/review';
 
-const DUMMY_STORE = {
-    id: '1',
-    name: '낭만모로코',
-    rating: 4.7,
-    hours: '10:00 - 22:00',
-    breakTime: '브레이크타임 : 15:00 - 17:00',
-    phone: '02-123-4567',
-    address: '서울특별시 관악구 관악로14길 88',
-    thumbnail: 'https://i.pinimg.com/736x/bf/c5/64/bfc56449fe1871d5cf1afacfdac52456.jpg',
-    isPendingApproval: true,
-    menus: [
-        { id: '1', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '2', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '3', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '4', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '5', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '6', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '7', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '8', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '9', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-        { id: '10', name: '두부아보카도샐러드', description: '부드러운 두부와 크리미한 아보카도를 신선한 채소와 함께 담아낸 샐러드입니다.', thumbnail: 'https://i.pinimg.com/1200x/cb/26/23/cb2623d77ded2ff0650182f1709d788f.jpg' },
-    ],
-    reviews: [
-        { id: '1', author: 'abcd1234', content: '음식이 정말 맛있었어요. 비건 메뉴인데도 맛이 전혀 부족하지 않았고 다시 방문하고 싶은 곳입니다.' },
-        { id: '2', author: 'abcd1234', content: '분위기도 좋고 직원분들도 친절했어요. 글루텐프리 옵션이 있어서 좋았습니다.' },
-        { id: '3', author: 'user5678', content: '비건 음식인데도 맛이 풍부해서 놀랐어요. 다음에 또 오고 싶습니다.' },
-        { id: '4', author: 'user9999', content: '가격 대비 퀄리티가 훌륭해요. 글루텐프리 메뉴도 다양해서 좋았습니다.' },
-        { id: '5', author: 'user0001', content: '직원분들이 친절하고 매장도 깔끔해요.' },
-    ],
+type Params = Promise<{ id: string }>;
+
+type Store = {
+    id: string;
+    name: string;
+    rating: number;
+    hours: string;
+    breakTime: string;
+    phone: string;
+    address: string;
+    thumbnail: string;
+    isPendingApproval: boolean;
+};
+
+type Menu = {
+    id: string;
+    name: string;
+    description: string;
+    thumbnail: string;
+};
+
+type Review = {
+    id: string;
+    author: string;
+    content: string;
+};
+
+type MenuApiResponse = {
+    menuId: number;
+    name: string;
+    description?: string;
+    imageUrl?: string;
+};
+
+type ReviewApiResponse = {
+    reviewId: number;
+    userNickname: string;
+    content: string;
 };
 
 const TABS = ['홈', '메뉴', '리뷰', '사진'];
@@ -70,59 +81,104 @@ function EllipsisIcon() {
     );
 }
 
-export default function StoreDetailPage({ params }: { params: { id: string } }) {
+export default function StoreDetailPage({ params }: { params: Params }) {
+    const { id } = use(params);
+
+    const [store, setStore] = useState<Store | null>(null);
+    const [menus, setMenus] = useState<Menu[]>([]);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('홈');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const tabBarRef = useRef<HTMLDivElement>(null);
 
-    function getTabBarBottom(): number {
-        if (!tabBarRef.current) return 100;
-        return tabBarRef.current.getBoundingClientRect().bottom + window.scrollY;
-    }
+    useEffect(() => {
+        async function fetchAll() {
+            try {
+                setLoading(true);
+
+                // 가게 상세
+                const storeData = await getRestaurant(Number(id));
+                setStore({
+                    id: String(storeData.restaurantId ?? storeData.id),
+                    name: storeData.name,
+                    rating: Number(storeData.rating ?? 0),
+                    hours: storeData.hours ?? '',
+                    breakTime: storeData.breakTime ?? '',
+                    phone: storeData.phone ?? '',
+                    address: storeData.address ?? '',
+                    thumbnail: storeData.thumbnail ?? storeData.imageUrl ?? '',
+                    isPendingApproval: storeData.status === 'PENDING', // ?? false 제거
+                });
+
+                // 메뉴 목록
+                const menuData = await getMenus(Number(id));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setMenus(
+                    menuData.map((m: MenuApiResponse) => ({
+                        id: String(m.menuId),
+                        name: m.name,
+                        description: m.description ?? '',
+                        thumbnail: m.imageUrl ?? '',
+                    }))
+                );
+
+                // 리뷰 목록
+                const reviewData = await getReviewsByRestaurant(Number(id));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setReviews(
+                    reviewData.content.map((r: ReviewApiResponse) => ({
+                        id: String(r.reviewId),
+                        author: r.userNickname,
+                        content: r.content,
+                    }))
+                );
+            } catch (e) {
+                console.error('데이터 불러오기 실패', e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchAll();
+    }, [id]);
 
     useEffect(() => {
         function onScroll() {
-            const offset =
-                (tabBarRef.current?.offsetHeight ?? 0) + 20;
-
+            const offset = (tabBarRef.current?.offsetHeight ?? 0) + 20;
             const scrollPos = window.scrollY + offset;
-
             let currentTab = TABS[0];
-
             TABS.forEach((tab) => {
                 const el = sectionRefs.current[tab];
                 if (!el) return;
-
-                if (scrollPos >= el.offsetTop) {
-                    currentTab = tab;
-                }
+                if (scrollPos >= el.offsetTop) currentTab = tab;
             });
-
             setActiveTab(currentTab);
         }
-
-        window.addEventListener('scroll', onScroll, {
-            passive: true,
-        });
-
+        window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
-
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
     function scrollToSection(tab: string) {
         const el = sectionRefs.current[tab];
         if (!el) return;
-
-        const headerHeight =
-            tabBarRef.current?.offsetHeight ?? 0;
-
-        window.scrollTo({
-            top: el.offsetTop - headerHeight,
-            behavior: 'smooth',
-        });
+        const headerHeight = tabBarRef.current?.offsetHeight ?? 0;
+        window.scrollTo({ top: el.offsetTop - headerHeight, behavior: 'smooth' });
     }
+
+    if (loading) return (
+        <div className="max-w-lg mx-auto flex items-center justify-center py-20">
+            <p className="text-sm text-gray-400">로딩 중...</p>
+        </div>
+    );
+
+    if (!store) return (
+        <div className="max-w-lg mx-auto flex items-center justify-center py-20">
+            <p className="text-sm text-gray-400">가게 정보를 찾을 수 없습니다.</p>
+        </div>
+    );
 
     return (
         <div className="max-w-lg mx-auto">
@@ -150,21 +206,29 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
                 <h2 className="text-sm font-semibold text-gray-900 mb-3">홈</h2>
                 <div className="flex gap-4">
                     <div style={{ width: '80px', height: '80px' }} className="rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
-                        <img src={DUMMY_STORE.thumbnail} alt={DUMMY_STORE.name} className="w-full h-full object-cover" />
+                        {store.thumbnail ? (
+                            <img src={store.thumbnail} alt={store.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-xs text-gray-400">이미지 없음</span>
+                            </div>
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    <h1 className="text-lg font-semibold text-gray-900">{DUMMY_STORE.name}</h1>
-                                    <span className="flex items-center gap-1 text-sm text-gray-500"><StarIcon /> {DUMMY_STORE.rating}</span>
+                                    <h1 className="text-lg font-semibold text-gray-900">{store.name}</h1>
+                                    <span className="flex items-center gap-1 text-sm text-gray-500">
+                    <StarIcon /> {store.rating}
+                  </span>
                                 </div>
-                                <InfoRow label="영업" value={DUMMY_STORE.hours} />
-                                <InfoRow label="" value={DUMMY_STORE.breakTime} />
-                                <InfoRow label="전화" value={DUMMY_STORE.phone} />
-                                <p className="text-xs text-gray-500 leading-relaxed mt-1">{DUMMY_STORE.address}</p>
+                                {store.hours && <InfoRow label="영업" value={store.hours} />}
+                                {store.breakTime && <InfoRow label="" value={store.breakTime} />}
+                                {store.phone && <InfoRow label="전화" value={store.phone} />}
+                                {store.address && <p className="text-xs text-gray-500 leading-relaxed mt-1">{store.address}</p>}
                             </div>
-                            {DUMMY_STORE.isPendingApproval && (
+                            {store.isPendingApproval && (
                                 <div className="relative">
                                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-1 text-gray-400 hover:text-gray-600 rounded-full transition-colors">
                                         <EllipsisIcon />
@@ -184,38 +248,50 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
             {/* 메뉴 섹션 */}
             <div ref={(el) => { sectionRefs.current['메뉴'] = el; }} style={DIVIDER} className="px-5 py-5">
                 <h2 className="text-sm font-semibold text-gray-900 mb-4">메뉴</h2>
-                <div className="flex flex-col gap-4">
-                    {DUMMY_STORE.menus.map((menu) => (
-                        <div key={menu.id} className="flex gap-3 items-start">
-                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                                <img src={menu.thumbnail} alt={menu.name} className="w-full h-full object-cover" />
+                {menus.length === 0 ? (
+                    <p className="text-xs text-gray-400">등록된 메뉴가 없습니다.</p>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        {menus.map((menu) => (
+                            <div key={menu.id} className="flex gap-3 items-start">
+                                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0 flex items-center justify-center">
+                                    {menu.thumbnail ? (
+                                        <img src={menu.thumbnail} alt={menu.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-xs text-gray-400">이미지 없음</span>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{menu.name}</p>
+                                    <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{menu.description}</p>
+                                </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{menu.name}</p>
-                                <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{menu.description}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* 리뷰 섹션 */}
             <div ref={(el) => { sectionRefs.current['리뷰'] = el; }} style={DIVIDER} className="px-5 py-5 min-h-[600px]">
                 <h2 className="text-sm font-semibold text-gray-900 mb-3">리뷰</h2>
-                <ul className="flex flex-col divide-y divide-gray-100">
-                    {DUMMY_STORE.reviews.slice(0, 4).map((review) => (
-                        <li key={review.id} className="py-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <UserIcon />
+                {reviews.length === 0 ? (
+                    <p className="text-xs text-gray-400">등록된 리뷰가 없습니다.</p>
+                ) : (
+                    <ul className="flex flex-col divide-y divide-gray-100">
+                        {reviews.slice(0, 4).map((review) => (
+                            <li key={review.id} className="py-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <UserIcon />
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-800">{review.author}</span>
                                 </div>
-                                <span className="text-sm font-medium text-gray-800">{review.author}</span>
-                            </div>
-                            <p className="text-xs text-gray-600 leading-relaxed">{review.content}</p>
-                        </li>
-                    ))}
-                </ul>
-                <Link href={`/admin/stores/${DUMMY_STORE.id}/reviews`}>
+                                <p className="text-xs text-gray-600 leading-relaxed">{review.content}</p>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                <Link href={`/admin/stores/${id}/reviews`}>
                     <button className="w-full mt-4 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
                         리뷰 더보기
                     </button>
@@ -225,7 +301,7 @@ export default function StoreDetailPage({ params }: { params: { id: string } }) 
             {/* 사진 섹션 */}
             <div ref={(el) => { sectionRefs.current['사진'] = el; }} style={DIVIDER} className="px-5 py-5 min-h-[600px]">
                 <h2 className="text-sm font-semibold text-gray-900 mb-3">사진</h2>
-                <p className="text-xs text-gray-400 min-h-screen">등록된 사진이 없습니다.</p>
+                <p className="text-xs text-gray-400">등록된 사진이 없습니다.</p>
             </div>
         </div>
     );
