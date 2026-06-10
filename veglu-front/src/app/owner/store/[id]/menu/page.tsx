@@ -21,7 +21,7 @@ export default function MenuPage({ params }: { params: Promise<{ id: string }> }
 
     type Menu = {
         id: string; // UI용 통일 ID
-        restaurantId: number;
+        restaurant_id: number;
         name: string;
         description: string;
         thumbnail: string;
@@ -33,7 +33,7 @@ export default function MenuPage({ params }: { params: Promise<{ id: string }> }
                 setMenus(
                     data.map((m: MenuApiResponse) => ({
                         id: String(m.menuId),   // ✅ 여기 핵심
-                        restaurantId: Number(id),
+                        restaurant_id: Number(id),
                         name: m.name,
                         description: m.description ?? '',
                         thumbnail: m.imageUrl ?? '',
@@ -100,7 +100,7 @@ export default function MenuPage({ params }: { params: Promise<{ id: string }> }
 
             {showAddModal && (
                 <AddMenuModal
-                    restaurantId={Number(id)}
+                    restaurant_id={Number(id)}
                     onClose={() => setShowAddModal(false)}
                     onAdd={(newMenu) => setMenus((prev) => [...prev, newMenu])}
                 />

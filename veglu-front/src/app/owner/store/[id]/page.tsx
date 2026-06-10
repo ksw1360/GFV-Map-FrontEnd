@@ -46,7 +46,7 @@ export default function StoreHomePage({ params }: { params: Promise<{ id: string
     useEffect(() => {
         getRestaurant(Number(id))
             .then((data) => setStore({
-                id: String(data.restaurantId),
+                id: String(data.restaurant_id),
                 name: data.name,
                 rating: data.avgRating ?? 0,
                 hours: data.businessHours ? Object.values(data.businessHours)[0] as string : '',

@@ -31,7 +31,7 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
             const created = await createPhoto({
                 url: urlInput.trim(),
                 type: 'RESTAURANT',
-                restaurantId: Number(id),
+                restaurant_id: Number(id),
                 // caption 제거
             });
             setPhotos((prev) => [...prev, created]);

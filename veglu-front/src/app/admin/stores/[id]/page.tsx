@@ -102,7 +102,7 @@ export default function StoreDetailPage({ params }: { params: Params }) {
                 // 가게 상세
                 const storeData = await getRestaurant(Number(id));
                 setStore({
-                    id: String(storeData.restaurantId ?? storeData.id),
+                    id: String(storeData.restaurant_id ?? storeData.id),
                     name: storeData.name,
                     rating: Number(storeData.rating ?? 0),
                     hours: storeData.hours ?? '',

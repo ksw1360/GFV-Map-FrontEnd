@@ -26,13 +26,13 @@ export async function updateRestaurant(id: number, data: {
 }
 
 // 메뉴 목록 조회
-export async function getMenus(restaurantId: number) {
-    return apiClient(`/restaurant/${restaurantId}/menus`);
+export async function getMenus(restaurant_id: number) {
+    return apiClient(`/restaurant/${restaurant_id}/menus`);
 }
 
 // 메뉴 추가
 export async function createMenu(data: {
-    restaurantId: number;
+    restaurant_id: number;
     name: string;
     price?: number;
     description?: string;

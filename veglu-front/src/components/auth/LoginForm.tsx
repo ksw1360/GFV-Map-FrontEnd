@@ -75,6 +75,15 @@ export default function LoginForm({ setViewMode, onClose, onLoginSuccess }: Logi
                 const userRole = data.role || data.user?.role || 'USER';
                 localStorage.setItem('user_role', userRole);
 
+                // 권한별 이동 경로 설정
+                if (userRole === 'ADMIN') {
+                    destinationPath = '/admin/users';
+                } else if (userRole === 'OWNER') {
+                    destinationPath = '/owner/dashboard';
+                } else {
+                    destinationPath = '/';
+                }
+
             }
 
             if (onLoginSuccess) {

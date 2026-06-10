@@ -7,11 +7,11 @@ import { createMenu } from '@/libs/api/restaurant';
 export default function AddMenuModal({
                                          onClose,
                                          onAdd,
-                                         restaurantId,
+                                         restaurant_id,
                                      }: {
     onClose: () => void;
     onAdd: (menu: Menu) => void;
-    restaurantId: number;
+    restaurant_id: number;
 }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -29,7 +29,7 @@ export default function AddMenuModal({
         if (!name.trim()) return;
         try {
             const created = await createMenu({
-                restaurantId,
+                restaurant_id,
                 name,
                 description,
                 imageUrl: photoPreview || undefined,
@@ -37,7 +37,7 @@ export default function AddMenuModal({
 
             onAdd({
                 id: String(created.menuId),  // id → menuId 로 수정
-                restaurantId,
+                restaurant_id,
                 name: created.name,
                 description: created.description ?? '',
                 thumbnail: created.imageUrl ?? photoPreview ?? '',

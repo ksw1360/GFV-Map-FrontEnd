@@ -4,7 +4,7 @@ import { serverApiClient } from './serverClient';
 // 타입 정의
 export type ReviewResponse = {
     reviewId: number;
-    restaurantId: number;
+    restaurant_id: number;
     restaurantName: string;
     userId: number;
     userNickname: string;
@@ -31,16 +31,16 @@ export type ReviewReplyResponse = {
 
 // 식당 리뷰 목록 조회
 export async function getReviewsByRestaurant(
-    restaurantId: number,
+    restaurant_id: number,
     page = 0,
     size = 10
 ) {
-    return apiClient(`/review/restaurant/${restaurantId}?page=${page}&size=${size}`);
+    return apiClient(`/review/restaurant/${restaurant_id}?page=${page}&size=${size}`);
 }
 
 // 리뷰 작성
 export async function createReview(data: {
-    restaurantId: number;
+    restaurant_id: number;
     rating: number;
     content: string;
     photos?: string[];

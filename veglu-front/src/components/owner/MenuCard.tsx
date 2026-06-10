@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export type Menu = {
     id: string;
-    restaurantId: number;
+    restaurant_id: number;
     name: string;
     description: string;
     thumbnail: string;

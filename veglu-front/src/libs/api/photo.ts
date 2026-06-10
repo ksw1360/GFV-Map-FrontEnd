@@ -1,15 +1,15 @@
 import { apiClient } from './client';
 
 // 사진 목록 조회
-export async function getPhotos(restaurantId: number) {
-    return apiClient(`/photo/restaurant/${restaurantId}`);
+export async function getPhotos(restaurant_id: number) {
+    return apiClient(`/photo/restaurant/${restaurant_id}`);
 }
 
 // 사진 등록
 export async function createPhoto(data: {
     url: string;
     type: 'RESTAURANT' | 'MENU';
-    restaurantId?: number;
+    restaurant_id?: number;
     menuId?: number;
     caption?: string;
     isMain?: boolean;

@@ -6,7 +6,7 @@ import { StoreCard } from '@/components/owner/StoreCard';
 import { getMyRestaurants } from '@/libs/api/restaurant';
 
 type Store = {
-    restaurantId: number;
+    restaurant_id: number;
     name: string;
     thumbnail?: string;
 };
@@ -36,10 +36,10 @@ export default function DashboardPage() {
             ) : (
                 <ul className="flex flex-col gap-4">
                     {stores.map((store) => (
-                        <li key={store.restaurantId}>
-                            <Link href={`/owner/store/${store.restaurantId}`}>
+                        <li key={store.restaurant_id}>
+                            <Link href={`/owner/store/${store.restaurant_id}`}>
                                 <StoreCard store={{
-                                    id: String(store.restaurantId),
+                                    id: String(store.restaurant_id),
                                     name: store.name,
                                     thumbnail: store.thumbnail ?? '',
                                 }} />
