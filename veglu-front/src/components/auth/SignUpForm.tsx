@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { AuthViewMode } from './AuthModal';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 interface SignUpFormProps {
     setViewMode: (mode: AuthViewMode) => void;
 }
@@ -88,7 +90,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/email/send`, {
+            const response = await fetch(`${BASE_URL}/auth/email/send`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.email })
@@ -127,7 +129,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
 
         setIsLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/email/verify`, {
+            const response = await fetch(`${BASE_URL}/auth/email/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -174,7 +176,7 @@ export default function SignUpForm({ setViewMode }: SignUpFormProps) {
         try {
             // ★ [리팩토링 반영] 필수항목 + Nullable 비필수 항목(전화번호, 자기소개, 프로필사진 경로)
             // 을 백엔드 자바 DTO 명세 양식에 맞춰 빈 값 가드를 쳐서 JSON 바디에 정렬 수입합니다.
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signup`, {
+            const response = await fetch(`${BASE_URL}/auth/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
