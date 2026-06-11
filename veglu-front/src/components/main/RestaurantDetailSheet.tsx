@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { toggleFavorite, checkFavorite } from '@/libs/api/favorite';
-import { createPhoto } from '@/libs/api/photo'; // 🎯 제공해주신 사진 단독 등록 API 모듈 연동
+import { createPhoto } from '@/libs/api/photo';
 
 interface Restaurant {
     restaurant_id: number;

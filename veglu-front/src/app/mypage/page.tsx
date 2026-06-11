@@ -106,34 +106,42 @@ export default function MyPage() {
                 parsedPhotos = Array.isArray(photoData) ? photoData : (photoData.content || []);
             }
 
-            // 3. [사진첩 완전 재조립 데이터 가공] 리뷰 이미지 + 순수 개별 등록 이미지 병합
             const extractedPhotos: GalleryPhoto[] = [];
+            const seenUrls = new Set<string>();
 
-            // (A) 리뷰 글 본문에 첨부되었던 사진 군단 추출
             parsedReviews.forEach((review, rIndex) => {
                 if (review.photos && Array.isArray(review.photos)) {
                     review.photos.forEach((photoUrl, pIndex) => {
                         if (photoUrl && photoUrl.trim() !== '') {
-                            extractedPhotos.push({
-                                id: `review-${review.reviewId || rIndex}-${pIndex}`,
-                                title: review.recommendedMenu ? `추천: ${review.recommendedMenu}` : '안심 비건 인증 먹거리',
-                                url: photoUrl
-                            });
+                            // 🌟 중복 가드 장착: 처음 보는 주소일 때만 사진첩에 넣습니다.
+                            if (!seenUrls.has(photoUrl)) {
+                                seenUrls.add(photoUrl);
+                                extractedPhotos.push({
+                                    id: `review-${review.reviewId || rIndex}-${pIndex}`,
+                                    title: review.recommendedMenu ? `추천: ${review.recommendedMenu}` : '안심 비건 인증 먹거리',
+                                    url: photoUrl
+                                });
+                            }
                         }
                     });
                 }
             });
 
-            // (B) POST /photo 채널을 통해 단독으로 기재 업로드했던 실물 포토 병합
-            parsedPhotos.forEach((photo, pIndex) => {
-                if (photo.url && photo.url.trim() !== '') {
-                    extractedPhotos.push({
-                        id: `direct-photo-${photo.photoId || pIndex}`,
-                        title: photo.caption || '식당 인증 포토',
-                        url: photo.url
-                    });
-                }
-            });
+            if (parsedPhotos && parsedPhotos.length > 0) {
+                parsedPhotos.forEach((photo, pIndex) => {
+                    if (photo.url && photo.url.trim() !== '') {
+                        // 🌟 중복 가드 장착: 이미 리뷰 가드(A)에서 수집된 주소라면 중복이므로 과감히 패스(Skip)합니다.
+                        if (!seenUrls.has(photo.url)) {
+                            seenUrls.add(photo.url);
+                            extractedPhotos.push({
+                                id: `direct-photo-${photo.photoId || pIndex}`,
+                                title: photo.caption || '식당 인증 포토',
+                                url: photo.url
+                            });
+                        }
+                    }
+                });
+            }
 
             setMyPhotos(extractedPhotos);
 
@@ -262,7 +270,7 @@ export default function MyPage() {
                 )}
 
                 <div className="pt-4 border-t border-gray-100 text-center text-[11px] text-gray-400 font-medium">
-                    현재 마이페이지 독립형 스프린트 조립 중입니다.
+                    마이페이지
                 </div>
             </div>
 
