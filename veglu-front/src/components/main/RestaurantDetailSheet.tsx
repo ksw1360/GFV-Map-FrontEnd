@@ -75,6 +75,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const [writeCompanionCount, setWriteCompanionCount] = useState<number>(1);
     const [writeRecMenu, setWriteRecMenu] = useState<string>('');
     const [writePhotoUrl, setWritePhotoUrl] = useState<string>('');
+    const [uploadedFileName, setUploadedFileName] = useState<string>('');
     const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://192.168.7.120:5000';
@@ -124,6 +125,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || stableRestaurantId === 0) return;
+        setUploadedFileName(file.name);
 
         try {
             const accessToken = localStorage.getItem('accessToken');
@@ -278,9 +280,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const handleFavoriteToggle = async () => {
         try {
             const res = await toggleFavorite(stableRestaurantId);
-
-            // 🎯 [완치 포인트 1] 백엔드가 객체 형태 { favorited: true } 로 주든,
-            // 혹은 순수 boolean 값(true/false) 자체로 주든 둘 다 대응할 수 있도록 완벽한 하이브리드 판정 가드를 칩니다.
             const nextFavoriteStatus = typeof res === 'object' && res !== null ? !!res.favorited : !!res;
 
             setIsFavorited(nextFavoriteStatus);
@@ -484,10 +483,11 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        placeholder="사진 URL을 붙여넣거나 우측 버튼으로 업로드"
-                                        value={writePhotoUrl}
+                                        placeholder="우측 버튼으로 사진 업로드"
+                                        value={uploadedFileName}
                                         onChange={(e) => setWritePhotoUrl(e.target.value)}
                                         className="flex-1 border p-1.5 rounded-lg bg-gray-50 text-xs font-medium focus:outline-none"
+                                        disabled={true}
                                     />
                                     <input
                                         type="file"
