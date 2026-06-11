@@ -160,7 +160,6 @@ export default function Header({ onLogout, onFilterChange }: HeaderProps) {
             </div>
 
             <div className="flex items-center space-x-3 flex-shrink-0">
-
                 <button
                     type="button"
                     onClick={() => router.push('/mypage')}

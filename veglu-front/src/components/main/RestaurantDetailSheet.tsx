@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { toggleFavorite, checkFavorite } from '@/libs/api/favorite';
+import { createPhoto } from '@/libs/api/photo'; // 🎯 제공해주신 사진 단독 등록 API 모듈 연동
 
 interface Restaurant {
     restaurant_id: number;
@@ -74,6 +75,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const [writeCompanionCount, setWriteCompanionCount] = useState<number>(1);
     const [writeRecMenu, setWriteRecMenu] = useState<string>('');
     const [writePhotoUrl, setWritePhotoUrl] = useState<string>('');
+    const [uploadedFileName, setUploadedFileName] = useState<string>(''); // 🎯 순수 사진 파일명 추적 상태망 유지
     const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://192.168.7.120:5000';
@@ -132,11 +134,15 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
         const file = e.target.files?.[0];
         if (!file || stableRestaurantId === 0) return;
 
+        // 🎯 [순수 요구명세 수립] 사용자가 고른 실물 이미지의 파일명을 상단 상태칸에 고착
+        setUploadedFileName(file.name);
+
         try {
             const accessToken = localStorage.getItem('accessToken');
             const fd = new FormData();
             fd.append('file', file);
 
+            // 1단계: S3 바이너리 파일 전송망 노크
             const upRes = await fetch(`${BACKEND_URL}/photo/upload`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${accessToken}` },
@@ -148,26 +154,19 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
 
             setWritePhotoUrl(url);
 
-            const dbRes = await fetch(`${BACKEND_URL}/photo`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    url: url,
-                    type: 'RESTAURANT',
-                    restaurantId: stableRestaurantId,
-                    menuId: null,
-                    caption: "식당 사진",
-                    isMain: false
-                }),
+            // 2단계: 🎯 [photo.ts 내부 구조 결속] 하드코딩 fetch 구역을 원천 추상화 함수인 createPhoto로 정밀 이식 교체 완료
+            await createPhoto({
+                url: url,
+                type: 'RESTAURANT',
+                restaurant_id: stableRestaurantId,
+                menuId: undefined,
+                caption: "식당 사진",
+                isMain: false
             });
 
-            if (dbRes.ok) {
-                setToastMessage("📸 사진이 안전하게 등록되었습니다!");
-                fetchRestaurantReviews(stableRestaurantId);
-            }
+            setToastMessage("📸 사진이 안전하게 등록되었습니다!");
+            fetchRestaurantReviews(stableRestaurantId);
+
         } catch (err) {
             console.error("사진 업로드 프로세스 에러:", err);
             alert("사진 업로드 중 문제가 발생했습니다.");
@@ -180,6 +179,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
         setWriteCompanionCount(1);
         setWriteRecMenu('');
         setWritePhotoUrl('');
+        setUploadedFileName(''); // 🎯 초기화 무대 연동 유지
     };
 
     const fetchRestaurantMenus = async (id: number) => {
@@ -282,7 +282,10 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
         }
     };
 
+    // 낙관적 업데이트 기반 즐겨찾기 제어 허브
     const handleFavoriteToggle = async () => {
+        const nextFavoriteStatus = !isFavorited;
+
         try {
             const res = await toggleFavorite(stableRestaurantId);
             const nextFavoriteStatus = typeof res === 'object' && res !== null
@@ -290,14 +293,19 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                 : !!res;
 
             setIsFavorited(nextFavoriteStatus);
-
             if (nextFavoriteStatus) {
                 setToastMessage("💛 안심 식당으로 찜 완료!");
             } else {
                 setToastMessage("☆ 안심 식당 등록이 취소되었습니다.");
             }
+
+            // 🎯 [favorite.ts 연동 완료]
+            await toggleFavorite(stableRestaurantId);
+
         } catch (err) {
             console.error("즐겨찾기 토글 처리 오류:", err);
+            setIsFavorited(!nextFavoriteStatus);
+            setToastMessage(null);
             alert('즐겨찾기 처리에 실패했습니다.');
         }
     };
@@ -353,7 +361,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                         className={`p-2 rounded-xl transition-all duration-300 border flex items-center justify-center w-9 h-9 text-lg shadow-sm active:scale-95 cursor-pointer ${
                             isFavorited
                                 ? 'bg-yellow-50 border-yellow-400 font-black'
-                                : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                                : 'bg-gray-50 border-gray-200 text-gray-300 hover:bg-gray-100'
                         }`}
                         title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
                     >
@@ -390,7 +398,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                     );
                 })}
             </div>
-
             <div className="flex-1 overflow-y-auto pr-1 text-xs text-gray-600 leading-relaxed min-h-0 bg-gray-50/50 rounded-xl p-4 border border-gray-100">
 
                 {activeTab === 'HOME' && (
@@ -468,14 +475,14 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                             </div>
 
                             <div className="space-y-1">
-                                <label className="font-bold text-[11px] text-gray-500 block">📸 사진 첨부 (파일 또는 URL)</label>
+                                <label className="font-bold text-[11px] text-gray-500 block">📸 사진 첨부 (파일)</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        placeholder="사진 URL을 붙여넣거나 우측 버튼으로 업로드"
-                                        value={writePhotoUrl}
-                                        onChange={(e) => setWritePhotoUrl(e.target.value)}
+                                        placeholder="우측 버튼으로 사진 업로드"
+                                        value={uploadedFileName}
                                         className="flex-1 border p-1.5 rounded-lg bg-gray-50 text-xs font-medium focus:outline-none"
+                                        disabled={true}
                                     />
                                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                                     <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[10px] rounded-lg transition-all">
@@ -539,7 +546,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                                 </div>
                             ))}
                             {!isReviewLoading && reviews.length === 0 && (
-                                <div className="text-center py-12 text-xs text-gray-400 font-medium bg-white border rounded-2xl border-dashed">아직 등록된 방문자 안심 평판 피드가 없습니다. <br/>첫 번째 든든한 등불이 되어보세요! 🥑</div>
+                                <div className="text-center py-12 text-xs text-gray-400 font-medium bg-white border rounded-2xl border-dashed">아직 등록된 방문자 안심 평판 피드가 없습니다. <br/>첫 번째 든든한 등불이 되어보세요! ◀</div>
                             )}
                         </div>
                     </div>
