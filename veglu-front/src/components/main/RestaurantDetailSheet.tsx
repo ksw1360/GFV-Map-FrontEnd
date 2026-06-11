@@ -61,7 +61,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isFavorited, setIsFavorited] = useState(false);
-    // 🎯 [토스트 상태 분리] 토스트창의 독립적인 라이프사이클 관리를 위한 상태 추가
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     const [menus, setMenus] = useState<MenuSpec[]>([]);
@@ -79,7 +78,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
 
     const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://192.168.7.120:5000';
 
-    // 상세페이지 라이프사이클 및 데이터 선행 징집 락 엔진
     useEffect(() => {
         if (restaurant) {
             cachedRestaurantRef.current = restaurant;
@@ -107,7 +105,7 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                 cachedRestaurantRef.current = null;
                 setStableRestaurantId(0);
                 setIsFavorited(false);
-                setToastMessage(null); // 닫힐 때 팝업 초기화
+                setToastMessage(null);
                 setMenus([]);
                 setReviews([]);
             }, 300);
@@ -118,8 +116,17 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     // 즐겨찾기 여부 확인
     useEffect(() => {
         if (!stableRestaurantId || stableRestaurantId <= 0) return;
-        checkFavorite(stableRestaurantId).then(setIsFavorited).catch(() => {});
+        checkFavorite(stableRestaurantId)
+            .then((res: { isFavorite: boolean }) => setIsFavorited(res.isFavorite))
+            .catch(() => {});
     }, [stableRestaurantId]);
+
+    // 토스트 자동 소멸
+    useEffect(() => {
+        if (!toastMessage) return;
+        const timer = setTimeout(() => setToastMessage(null), 2500);
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -278,17 +285,16 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
     const handleFavoriteToggle = async () => {
         try {
             const res = await toggleFavorite(stableRestaurantId);
-
-            // 🎯 [완치 포인트 1] 백엔드가 객체 형태 { favorited: true } 로 주든,
-            // 혹은 순수 boolean 값(true/false) 자체로 주든 둘 다 대응할 수 있도록 완벽한 하이브리드 판정 가드를 칩니다.
-            const nextFavoriteStatus = typeof res === 'object' && res !== null ? !!res.favorited : !!res;
+            const nextFavoriteStatus = typeof res === 'object' && res !== null
+                ? (res.isFavorite ?? res.added ?? res.favorited ?? !!res)
+                : !!res;
 
             setIsFavorited(nextFavoriteStatus);
 
             if (nextFavoriteStatus) {
                 setToastMessage("💛 안심 식당으로 찜 완료!");
             } else {
-                setToastMessage("☆ 즐겨찾기가 해제되었습니다.");
+                setToastMessage("☆ 안심 식당 등록이 취소되었습니다.");
             }
         } catch (err) {
             console.error("즐겨찾기 토글 처리 오류:", err);
@@ -300,15 +306,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
         setIsAnimatingOut(true);
         setTimeout(() => { onClose(); }, 300);
     };
-
-    // 🎯 [자동 타이머 가드] 토스트창이 열리면 정확히 2.5초 뒤에 자동으로 페이드아웃 소멸하게 처리합니다.
-    useEffect(() => {
-        if (!toastMessage) return;
-        const timer = setTimeout(() => {
-            setToastMessage(null);
-        }, 2500);
-        return () => clearTimeout(timer);
-    }, [toastMessage]);
 
     const currentViewShop = restaurant || cachedRestaurantRef.current;
 
@@ -326,7 +323,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                 isAnimatingOut ? 'transform translate-y-full opacity-0' : 'transform translate-y-0 opacity-100'
             }`}
         >
-            {/* 기본 정보 상단 타이틀 바 */}
             <div className="flex items-start justify-between border-b border-gray-100 pb-3 flex-shrink-0 relative">
                 <div className="flex items-center space-x-4 overflow-hidden">
                     <div className="w-14 h-14 bg-green-50 border border-green-100 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl shadow-inner">🌱</div>
@@ -343,7 +339,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                     </div>
                 </div>
 
-                {/* 즐겨찾기 + 닫기 버튼 구역 */}
                 <div className="flex items-center gap-2 relative">
                     {toastMessage && (
                         <div className="absolute bottom-14 right-0 bg-black text-white font-black text-[11px] px-4 py-2 rounded-xl shadow-2xl tracking-wide z-[999] flex items-center gap-1.5 border border-white/20 animate-in fade-in slide-in-from-bottom-2 duration-200">
@@ -375,7 +370,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                 </div>
             </div>
 
-            {/* 4단 탭 스위치 메뉴 */}
             <div className="flex space-x-1 border-b border-gray-100 my-3 text-xs font-bold flex-shrink-0">
                 {(['HOME', 'MENU', 'REVIEW', 'PHOTO'] as const).map((tab) => {
                     const tabNames = {
@@ -397,10 +391,8 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                 })}
             </div>
 
-            {/* 본문 디스플레이 무대 */}
             <div className="flex-1 overflow-y-auto pr-1 text-xs text-gray-600 leading-relaxed min-h-0 bg-gray-50/50 rounded-xl p-4 border border-gray-100">
 
-                {/* [HOME] */}
                 {activeTab === 'HOME' && (
                     <div className="space-y-3 animate-in fade-in duration-200">
                         <p className="font-semibold text-gray-800 text-sm">💡 매장 안내 요약</p>
@@ -414,7 +406,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                     </div>
                 )}
 
-                {/* [MENU] */}
                 {activeTab === 'MENU' && (
                     <div className="space-y-2 animate-in fade-in duration-200">
                         <p className="font-semibold text-gray-800 text-sm">📋 실물 메뉴판 명세 (서버 실시간 연동)</p>
@@ -438,11 +429,9 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                                             {item.veganType && (
                                                 <span className="text-[8px] bg-green-50 text-green-700 border border-green-200/50 font-extrabold px-1 rounded-sm">{item.veganType}</span>
                                             )}
-                                            {item.allergens && item.allergens.length > 0 ? (
-                                                item.allergens.map(al => (
-                                                    <span key={al} className="text-[8px] bg-red-50 text-red-600 border border-red-100 font-medium px-1 rounded-sm">🚫 {al}</span>
-                                                ))
-                                            ) : null}
+                                            {item.allergens && item.allergens.length > 0 && item.allergens.map(al => (
+                                                <span key={al} className="text-[8px] bg-red-50 text-red-600 border border-red-100 font-medium px-1 rounded-sm">🚫 {al}</span>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -452,7 +441,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                     </div>
                 )}
 
-                {/* [REVIEW] */}
                 {activeTab === 'REVIEW' && (
                     <div className="space-y-4 animate-in fade-in duration-200">
                         <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm space-y-3 text-left">
@@ -489,28 +477,16 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                                         onChange={(e) => setWritePhotoUrl(e.target.value)}
                                         className="flex-1 border p-1.5 rounded-lg bg-gray-50 text-xs font-medium focus:outline-none"
                                     />
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                        className="hidden"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[10px] rounded-lg transition-all"
-                                    >
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[10px] rounded-lg transition-all">
                                         파일 선택
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 text-[11px]">
-                                <div className="space-y-1">
-                                    <label className="font-bold text-gray-500 block">👍 추천 메뉴 입력 (선택)</label>
-                                    <input type="text" placeholder="예: 비건 토마토 파스타" value={writeRecMenu} onChange={(e) => setWriteRecMenu(e.target.value)} className="w-full border p-1.5 rounded-lg bg-gray-50 text-xs font-medium focus:outline-none" />
-                                </div>
+                            <div className="space-y-1 text-[11px]">
+                                <label className="font-bold text-gray-500 block">👍 추천 메뉴 입력 (선택)</label>
+                                <input type="text" placeholder="예: 비건 토마토 파스타" value={writeRecMenu} onChange={(e) => setWriteRecMenu(e.target.value)} className="w-full border p-1.5 rounded-lg bg-gray-50 text-xs font-medium focus:outline-none" />
                             </div>
 
                             <div className="space-y-1">
@@ -569,7 +545,6 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                     </div>
                 )}
 
-                {/* [PHOTO] */}
                 {activeTab === 'PHOTO' && (
                     <div className="space-y-2 animate-in fade-in duration-200 text-left">
                         <p className="font-bold text-gray-800 text-sm">📸 매장 실물 포토 피드 ({allGalleryPhotos.length})</p>

@@ -12,6 +12,7 @@ type Review = {
     content: string;
     reply?: string;
     replyId?: number;
+    isReported?: boolean;
 };
 
 type RestaurantReview = {
@@ -54,6 +55,7 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                                 content: r.content,
                                 reply: reply?.content,
                                 replyId: reply?.replyId,
+                                isReported: false,
                             };
                         } catch {
                             return {
@@ -61,6 +63,7 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                                 author: r.userNickname,
                                 rating: Number(r.rating),
                                 content: r.content,
+                                isReported: false,
                             };
                         }
                     })
@@ -126,7 +129,6 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
         if (!reportTarget) return;
         const targetId = reportTarget.id;
 
-        // 모달 먼저 닫기
         setReportTarget(null);
         setReportDetail('');
 
@@ -136,12 +138,13 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                 category: reportCategory,
                 detail: reportDetail,
             });
+            // 신고 성공 시 isReported true로 변경
+            setReviews((prev) =>
+                prev.map((r) => r.id === targetId ? { ...r, isReported: true } : r)
+            );
         } catch (e) {
             console.error('신고 실패', e);
         }
-
-        // API 성공/실패 관계없이 화면에서 제거
-        setReviews((prev) => prev.filter((r) => r.id !== targetId));
     }
 
     function handleSelectSort(type: SortType) {
@@ -203,7 +206,6 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                     <ul className="flex flex-col divide-y divide-gray-100">
                         {sorted.map((review) => (
                             <li key={review.id} className="py-4">
-                                {/* 작성자 + 별점 */}
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
                                         <UserIcon />
@@ -212,12 +214,10 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                                     <StarRating rating={review.rating} />
                                 </div>
 
-                                {/* 리뷰 본문 */}
                                 <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line mb-3">
                                     {review.content}
                                 </p>
 
-                                {/* 답글 박스 */}
                                 {review.reply && (
                                     <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-3">
                                         <p className="text-xs text-gray-500 font-medium mb-1">사장님 답글</p>
@@ -225,22 +225,24 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                                     </div>
                                 )}
 
-                                {/* 하단 버튼 */}
                                 <div className="flex justify-end gap-3">
-                                    {/* 신고 버튼 */}
-                                    <button
-                                        onClick={() => {
-                                            setReportTarget(review);
-                                            setReportCategory('ABUSE');
-                                            setReportDetail('');
-                                        }}
-                                        className="text-gray-400 hover:text-red-500 transition-colors"
-                                        aria-label="신고"
-                                    >
-                                        <ReportIcon />
-                                    </button>
+                                    {/* 신고 버튼 or 신고됨 표시 */}
+                                    {review.isReported ? (
+                                        <span className="text-xs text-red-400 font-medium flex items-center">신고됨</span>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                setReportTarget(review);
+                                                setReportCategory('ABUSE');
+                                                setReportDetail('');
+                                            }}
+                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                            aria-label="신고"
+                                        >
+                                            <ReportIcon />
+                                        </button>
+                                    )}
 
-                                    {/* 답글 버튼 */}
                                     <button
                                         onClick={() => {
                                             setReplyTarget(review);
@@ -252,7 +254,6 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                                         {review.reply && <span>수정하기</span>}
                                     </button>
 
-                                    {/* 답글 삭제 버튼 */}
                                     {review.reply && (
                                         <button
                                             onClick={() => setDeleteTarget(review.id)}
@@ -282,15 +283,15 @@ export default function ReviewsPage({ params }: { params: Promise<{ id: string }
                         <p className="text-xs text-gray-600 leading-relaxed">{replyTarget.content}</p>
                     </div>
                     <div className="flex-1 px-5 py-4 flex flex-col">
-            <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                maxLength={500}
-                placeholder="내용을 입력하세요."
-                style={{ height: '120px' }}
-                className="w-full text-sm text-gray-700 resize-none outline-none border border-gray-200 rounded-xl p-3 placeholder:text-gray-300"
-                autoFocus
-            />
+                        <textarea
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            maxLength={500}
+                            placeholder="내용을 입력하세요."
+                            style={{ height: '120px' }}
+                            className="w-full text-sm text-gray-700 resize-none outline-none border border-gray-200 rounded-xl p-3 placeholder:text-gray-300"
+                            autoFocus
+                        />
                         <div className="flex justify-between items-center mt-2">
                             <button
                                 onClick={() => setReplyTarget(null)}

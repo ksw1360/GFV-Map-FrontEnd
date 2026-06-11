@@ -3,11 +3,18 @@
 import { use, useState, useEffect } from 'react';
 import StoreTabs from '@/components/owner/StoreTabs';
 import { getPhotos, createPhoto, deletePhoto } from '@/libs/api/photo';
+import { getReviewsByRestaurant } from '@/libs/api/review';
 
 type Photo = {
     photoId: number;
     url: string;
     caption?: string;
+    isReview?: boolean;
+};
+
+type ReviewApiResponse = {
+    reviewId: number;
+    photos?: string[];
 };
 
 export default function PhotoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,10 +26,29 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     useEffect(() => {
-        getPhotos(Number(id))
-            .then((data: Photo[]) => setPhotos(data))
-            .catch((e) => console.error('사진 불러오기 실패', e))
-            .finally(() => setLoading(false));
+        async function fetchPhotos() {
+            try {
+                const photoData: Photo[] = await getPhotos(Number(id));
+
+                const reviewData = await getReviewsByRestaurant(Number(id));
+                const reviewPhotos: Photo[] = reviewData.content
+                    .flatMap((r: ReviewApiResponse, ri: number) =>
+                        (r.photos ?? []).map((url: string, pi: number) => ({
+                            photoId: -(ri * 1000 + pi + 1),
+                            url,
+                            caption: '리뷰 사진',
+                            isReview: true,
+                        }))
+                    );
+
+                setPhotos([...photoData, ...reviewPhotos]);
+            } catch (e) {
+                console.error('사진 불러오기 실패', e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchPhotos();
     }, [id]);
 
     async function handleAdd() {
@@ -31,8 +57,7 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
             const created = await createPhoto({
                 url: urlInput.trim(),
                 type: 'RESTAURANT',
-                restaurant_id: Number(id),
-                // caption 제거
+                restaurantId: Number(id),
             });
             setPhotos((prev) => [...prev, created]);
             setUrlInput('');
@@ -79,52 +104,54 @@ export default function PhotoPage({ params }: { params: Promise<{ id: string }> 
                         </button>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-                        {photos.map((photo) => (
-                            <div key={photo.photoId} style={{ position: 'relative', paddingBottom: '100%' }}>
-                                <img
-                                    src={photo.url || '/default-image.png'}
-                                    alt={photo.caption ?? '사진'}
-                                    style={{
-                                        position: 'absolute', inset: 0,
-                                        width: '100%', height: '100%',
-                                        objectFit: 'cover', borderRadius: '8px',
-                                    }}
-                                />
-                                <button
-                                    onClick={() => setDeleteTarget(photo.photoId)}
-                                    style={{
-                                        position: 'absolute', top: '4px', right: '4px',
-                                        width: '20px', height: '20px', borderRadius: '50%',
-                                        backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
-                                        fontSize: '11px', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        border: 'none', cursor: 'pointer', zIndex: 10,
-                                    }}
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        ))}
+                    <>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                            {photos.map((photo) => (
+                                <div key={photo.photoId} style={{ position: 'relative', paddingBottom: '100%' }}>
+                                    <img
+                                        src={photo.url || '/default-image.png'}
+                                        alt={photo.caption ?? '사진'}
+                                        style={{
+                                            position: 'absolute', inset: 0,
+                                            width: '100%', height: '100%',
+                                            objectFit: 'cover', borderRadius: '8px',
+                                        }}
+                                    />
+                                    {!photo.isReview && (
+                                        <button
+                                            onClick={() => setDeleteTarget(photo.photoId)}
+                                            style={{
+                                                position: 'absolute', top: '4px', right: '4px',
+                                                width: '20px', height: '20px', borderRadius: '50%',
+                                                backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+                                                fontSize: '11px', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center',
+                                                border: 'none', cursor: 'pointer', zIndex: 10,
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                    {photo.isReview && (
+                                        <div style={{
+                                            position: 'absolute', bottom: '4px', left: '4px',
+                                            backgroundColor: 'rgba(0,0,0,0.5)', color: 'white',
+                                            fontSize: '9px', padding: '1px 5px', borderRadius: '4px',
+                                        }}>
+                                            리뷰
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
 
                         <button
                             onClick={() => setShowAddModal(true)}
-                            style={{
-                                position: 'relative', paddingBottom: '100%',
-                                cursor: 'pointer', background: 'none', border: 'none', padding: 0,
-                            }}
+                            className="mt-3 w-full py-3 text-sm text-gray-500 border border-dashed border-gray-300 rounded-xl hover:bg-gray-50"
                         >
-                            <div style={{
-                                position: 'absolute', inset: 0, borderRadius: '8px',
-                                border: '1.5px dashed #d1d5db', backgroundColor: '#f9fafb',
-                                display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', justifyContent: 'center', gap: '4px',
-                            }}>
-                                <CameraIcon />
-                                <span style={{ fontSize: '10px', color: '#9ca3af' }}>{photos.length}장</span>
-                            </div>
+                            + 사진 추가
                         </button>
-                    </div>
+                    </>
                 )}
             </div>
 

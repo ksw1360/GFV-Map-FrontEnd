@@ -6,7 +6,7 @@ import { StoreCard } from '@/components/owner/StoreCard';
 import { getMyRestaurants } from '@/libs/api/restaurant';
 
 type Store = {
-    restaurant_id: number;
+    restaurantId: number;
     name: string;
     thumbnail?: string;
 };
@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         getMyRestaurants()
-            .then(setStores)
+            .then((data) => { console.log(data[0]); setStores(data); })
             .catch((e) => console.error('가게 목록 불러오기 실패', e))
             .finally(() => setLoading(false));
     }, []);
@@ -36,10 +36,10 @@ export default function DashboardPage() {
             ) : (
                 <ul className="flex flex-col gap-4">
                     {stores.map((store) => (
-                        <li key={store.restaurant_id}>
-                            <Link href={`/owner/store/${store.restaurant_id}`}>
+                        <li key={store.restaurantId}>
+                            <Link href={`/owner/store/${store.restaurantId}`}>
                                 <StoreCard store={{
-                                    id: String(store.restaurant_id),
+                                    id: String(store.restaurantId),
                                     name: store.name,
                                     thumbnail: store.thumbnail ?? '',
                                 }} />

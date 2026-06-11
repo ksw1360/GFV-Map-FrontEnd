@@ -4,6 +4,7 @@ import {use, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import { getRestaurant, getMenus } from '@/libs/api/restaurant';
 import { getReviewsByRestaurant } from '@/libs/api/review';
+import { getPhotos } from '@/libs/api/photo';
 
 type Params = Promise<{ id: string }>;
 
@@ -32,6 +33,12 @@ type Review = {
     content: string;
 };
 
+type Photo = {
+    id: string;
+    url: string;
+    caption?: string;
+};
+
 type MenuApiResponse = {
     menuId: number;
     name: string;
@@ -43,6 +50,13 @@ type ReviewApiResponse = {
     reviewId: number;
     userNickname: string;
     content: string;
+    photos?: string[];
+};
+
+type PhotoApiResponse = {
+    photoId: number;
+    url: string;
+    caption?: string;
 };
 
 const TABS = ['홈', '메뉴', '리뷰', '사진'];
@@ -87,6 +101,7 @@ export default function StoreDetailPage({ params }: { params: Params }) {
     const [store, setStore] = useState<Store | null>(null);
     const [menus, setMenus] = useState<Menu[]>([]);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [photos, setPhotos] = useState<Photo[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('홈');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -110,12 +125,11 @@ export default function StoreDetailPage({ params }: { params: Params }) {
                     phone: storeData.phone ?? '',
                     address: storeData.address ?? '',
                     thumbnail: storeData.thumbnail ?? storeData.imageUrl ?? '',
-                    isPendingApproval: storeData.status === 'PENDING', // ?? false 제거
+                    isPendingApproval: storeData.status === 'PENDING',
                 });
 
                 // 메뉴 목록
                 const menuData = await getMenus(Number(id));
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setMenus(
                     menuData.map((m: MenuApiResponse) => ({
                         id: String(m.menuId),
@@ -127,7 +141,6 @@ export default function StoreDetailPage({ params }: { params: Params }) {
 
                 // 리뷰 목록
                 const reviewData = await getReviewsByRestaurant(Number(id));
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setReviews(
                     reviewData.content.map((r: ReviewApiResponse) => ({
                         id: String(r.reviewId),
@@ -135,6 +148,27 @@ export default function StoreDetailPage({ params }: { params: Params }) {
                         content: r.content,
                     }))
                 );
+
+                // 리뷰 사진 추출
+                const reviewPhotos = reviewData.content
+                    .flatMap((r: ReviewApiResponse) => r.photos ?? [])
+                    .map((url: string, index: number) => ({
+                        id: `review-photo-${index}`,
+                        url,
+                        caption: '',
+                    }));
+
+                // 점주 사진 목록
+                const photoData = await getPhotos(Number(id));
+                const storePhotos = photoData.map((p: PhotoApiResponse) => ({
+                    id: String(p.photoId),
+                    url: p.url,
+                    caption: p.caption ?? '',
+                }));
+
+                // 점주 사진 + 리뷰 사진 합치기
+                setPhotos([...storePhotos, ...reviewPhotos]);
+
             } catch (e) {
                 console.error('데이터 불러오기 실패', e);
             } finally {
@@ -220,8 +254,8 @@ export default function StoreDetailPage({ params }: { params: Params }) {
                                 <div className="flex items-center gap-2 mb-1">
                                     <h1 className="text-lg font-semibold text-gray-900">{store.name}</h1>
                                     <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <StarIcon /> {store.rating}
-                  </span>
+                                        <StarIcon /> {store.rating}
+                                    </span>
                                 </div>
                                 {store.hours && <InfoRow label="영업" value={store.hours} />}
                                 {store.breakTime && <InfoRow label="" value={store.breakTime} />}
@@ -301,7 +335,17 @@ export default function StoreDetailPage({ params }: { params: Params }) {
             {/* 사진 섹션 */}
             <div ref={(el) => { sectionRefs.current['사진'] = el; }} style={DIVIDER} className="px-5 py-5 min-h-[600px]">
                 <h2 className="text-sm font-semibold text-gray-900 mb-3">사진</h2>
-                <p className="text-xs text-gray-400">등록된 사진이 없습니다.</p>
+                {photos.length === 0 ? (
+                    <p className="text-xs text-gray-400">등록된 사진이 없습니다.</p>
+                ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                        {photos.map((photo) => (
+                            <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                                <img src={photo.url} alt={photo.caption || '사진'} className="w-full h-full object-cover" />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

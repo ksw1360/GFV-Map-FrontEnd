@@ -6,7 +6,7 @@ import Sidebar from '@/components/main/Sidebar';
 import MapContainer from '@/components/main/MapContainer';
 import AuthModal from '@/components/auth/AuthModal';
 import RestaurantDetailSheet from '@/components/main/RestaurantDetailSheet';
-import { getMyFavorites } from '@/libs/api/favorite'; // 🎯 유저님이 제공해주신 API 함수 로드
+import { getMyFavorites } from '@/libs/api/favorite';
 
 interface Restaurant {
     restaurant_id: number;
@@ -116,7 +116,7 @@ export default function MainPage() {
             getMyFavorites(0, 100)
                 .then((pageData) => {
                     // 유저님이 매핑 규격을 적어놓으신 r.restaurant_id가 일치하는 녀석들만 마스터 시드군에서 선별합니다.
-                    const favoriteIds = pageData.content.map((item: any) => item.restaurant_id);
+                    const favoriteIds = pageData.content.map((item: any) => item.restaurantId);
                     const filtered = allRestaurants.filter(r => favoriteIds.includes(r.restaurant_id));
 
                     setRestaurants(filtered);
