@@ -162,15 +162,6 @@ export default function Header({ onLogout, onFilterChange }: HeaderProps) {
             <div className="flex items-center space-x-3 flex-shrink-0">
                 <button
                     type="button"
-                    onClick={() => router.push('/mypage/favorites')}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-yellow-400/50 rounded-xl transition-all shadow-sm active:scale-[0.98]"
-                    title="즐겨찾기 목록"
-                >
-                    <span className="text-base">⭐</span>
-                    <span className="text-xs font-bold text-gray-700 hover:text-yellow-500 transition-colors">즐겨찾기</span>
-                </button>
-                <button
-                    type="button"
                     onClick={() => router.push('/mypage')}
                     className="flex items-center space-x-2 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-green-600/30 rounded-xl transition-all shadow-sm active:scale-[0.98] group"
                     title="마이페이지로 이동"
