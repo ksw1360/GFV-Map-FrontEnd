@@ -107,6 +107,19 @@ export default function MainPage() {
         }
     };
 
+    const handleFavoriteStatusChangeInSheet = () => {
+        if (!isFavoriteMode) return; // 전체 보기 모드일 때는 동기화 생략
+
+        // 찜한 식당만 보기 모드일 때 실시간 리패치 수행하여 목록 바로 갱신
+        getMyFavorites(0, 100)
+            .then((pageData) => {
+                const favoriteIds = pageData.content.map((item: any) => item.restaurant_id);
+                const filtered = allRestaurants.filter(r => favoriteIds.includes(r.restaurant_id));
+                setRestaurants(filtered);
+            })
+            .catch((err) => console.error(err));
+    };
+
     // 🎯 [실시간 동기화 라인] 즐겨찾기 스위치를 토글할 때 작동하는 핵심 비동기 스트림 제어 훅
     useEffect(() => {
         if (!isLoggedIn) return;
@@ -286,14 +299,17 @@ export default function MainPage() {
                             onToggleSidebar={(open) => setIsSidebarOpen(open)}
                         />
 
-                        {/* 🎯 바텀시트에서 즐겨찾기 별을 클릭하여 상태를 갱신하면, 메인 화면 리스트가 자동 반응하도록 콜백 채널 설계 */}
                         <RestaurantDetailSheet
-                            restaurant={selectedRestaurantId !== null ? (restaurants.find(r => r.restaurant_id === selectedRestaurantId) || null) : null}
+                            restaurant={
+                                selectedRestaurantId !== null
+                                    ? (allRestaurants.find(r => r.restaurant_id === selectedRestaurantId) || null)
+                                    : null
+                            }
                             onClose={() => {
                                 setSelectedRestaurantId(null);
-                                // 💡 [UX 최적화 가드] 상세시트를 닫을 때 즐겨찾기 모드가 켜져 있었다면
-                                // 바텀시트 안에서 하트를 해제했을 확률이 높으므로 리스트를 백그라운드 실시간 강제 새로고침 리패치 처리합니다.
-                                if (isFavoriteMode) setIsFavoriteMode(false);
+                                // 💡 닫을 때 무조건 모드를 끄는 코드를 제거하여 찜 목록 뷰포트 상태를 안전하게 고정 보존합니다.
+                                // 필요하다면 해제된 데이터 갱신을 위해 동기화 허브만 노크합니다.
+                                handleFavoriteStatusChangeInSheet();
                             }}
                             isSidebarOpen={isSidebarOpen}
                         />
