@@ -33,21 +33,6 @@ export default function MainPage() {
     const handleHeaderFilter = async (filterData: any) => {
         console.log("➡️ 부모가 전달받은 원본 조건 데이터:", filterData);
 
-        const isDevMode = true; 
-        if (isDevMode) {
-            console.warn("⚠️ 백엔드 접근 거부(403) 우회 중: 더미 데이터 사용");
-            setRestaurants([{
-                restaurant_id: 1,
-                name: "테스트 식당(더미)",
-                address: "서울특별시 강남구",
-                points: "안심점수 90점",
-                matchedMenus: ["비건 스무디"],
-                veganType: "비건",
-                rating: 4.5
-            }]);
-            return;
-        }
-
         // 즐겨찾기 모드가 켜져 있다면 검색 작동 시 충돌 방지를 위해 스위치를 Off 해줍니다.
         setIsFavoriteMode(false);
 
