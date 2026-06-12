@@ -27,9 +27,14 @@ export default function OAuthCallback() {
         }
 
         if (accessToken) {
-            setStatusText('🎉 인증 성공! 비건 안심 지도로 진입합니다.');
+            // LocalStorage에 인증 및 유저 정보 동기화 저장 전, 기존 로그인 잔재 청소
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('user_nickname');
+            localStorage.removeItem('user_avatar');
+            localStorage.removeItem('user_role');
 
-            // LocalStorage에 인증 및 유저 정보 동기화 저장
             localStorage.setItem('accessToken', accessToken);
             if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
             if (email) localStorage.setItem('user_email', email);
@@ -37,12 +42,18 @@ export default function OAuthCallback() {
             if (profileImageUrl) localStorage.setItem('user_avatar', profileImageUrl);
             if (role) localStorage.setItem('user_role', role);
 
+            setTimeout(() => {
+                setStatusText('🎉 인증 성공! 비건 안심 지도로 진입합니다.');
+            }, 0);
+
             // React/Next.js의 Auth Provider 및 레이아웃 상태 갱신을 위해 window.location.href로 강제 새로고침 리다이렉트
             setTimeout(() => {
                 window.location.href = '/';
             }, 500);
         } else {
-            setStatusText('⚠️ 인증 토큰을 찾을 수 없습니다. 로그인 페이지로 돌아갑니다.');
+            setTimeout(() => {
+                setStatusText('⚠️ 인증 토큰을 찾을 수 없습니다. 로그인 페이지로 돌아갑니다.');
+            }, 0);
             setTimeout(() => {
                 window.location.href = '/login';
             }, 1500);
