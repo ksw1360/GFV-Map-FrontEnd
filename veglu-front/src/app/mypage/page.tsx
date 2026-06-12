@@ -179,10 +179,10 @@ export default function MyPage() {
 
                 <div className="flex flex-col items-center space-y-3 pt-2">
                     <div className="w-24 h-24 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center text-3xl shadow-inner overflow-hidden">
-                        {avatar.startsWith('data:image') || avatar.startsWith('http') ? (
+                        {avatar && (avatar.startsWith('data:image') || avatar.startsWith('http')) ? (
                             <img src={avatar} alt="user-avatar" className="w-full h-full object-cover" />
                         ) : (
-                            avatar
+                            avatar && !['default', 'null', 'undefined'].includes(avatar) ? avatar : '🥑'
                         )}
                     </div>
                     <div className="text-center">

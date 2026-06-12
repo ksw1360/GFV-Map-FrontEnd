@@ -199,12 +199,12 @@ export default function MyPageEdit() {
                         onClick={() => setIsAvatarModalOpen(true)}
                         className="w-24 h-24 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center overflow-hidden shadow-inner relative group hover:brightness-95 transition-all"
                     >
-                        {avatar === 'default' || !avatar ? (
-                            <span className="text-4xl">🥑</span>
-                        ) : avatar.startsWith('data:image') || avatar.startsWith('http') ? (
+                        {avatar && (avatar.startsWith('data:image') || avatar.startsWith('http')) ? (
                             <img src={avatar} alt="업로드 이미지" className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-4xl">{avatar}</span>
+                            <span className="text-4xl">
+                                {avatar && !['default', 'null', 'undefined'].includes(avatar) ? avatar : '🥑'}
+                            </span>
                         )}
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
                             변경 📸
@@ -318,12 +318,25 @@ export default function MyPageEdit() {
                     <div className="w-full max-w-xs bg-white border border-gray-100 rounded-3xl shadow-2xl p-6 space-y-4 relative text-center animate-in fade-in zoom-in-95 duration-100">
                         <h3 className="text-xs font-bold text-gray-400 tracking-wider uppercase">이미지 업로드 컴포넌트(모달)</h3>
                         <div className="flex flex-col space-y-2 text-xs font-semibold pt-2">
+                            {/* 기본 이모지 선택 버튼 주석 처리 */}
+                            {/*
                             <button
                                 type="button"
                                 onClick={handleOpenEmojiList}
                                 className="w-full py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl transition-all"
                             >
                                 기본 이미지 선택
+                            </button>
+                            */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setAvatar('default');
+                                    setIsAvatarModalOpen(false);
+                                }}
+                                className="w-full py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl transition-all"
+                            >
+                                기본 이미지로 변경
                             </button>
                             <button
                                 type="button"
@@ -346,7 +359,8 @@ export default function MyPageEdit() {
                 </div>
             )}
 
-            {/* 이모지 리스트 모달 */}
+            {/* 이모지 리스트 모달 (주석 처리) */}
+            {/*
             {isEmojiListOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-100">
                     <div className="w-full max-w-xs bg-white rounded-2xl shadow-2xl p-5 space-y-3 animate-in fade-in zoom-in-95 duration-100">
@@ -375,6 +389,7 @@ export default function MyPageEdit() {
                     </div>
                 </div>
             )}
+            */}
         </div>
     );
 }

@@ -80,14 +80,16 @@ export default function AdminStoreReviewsPage({
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
                                     <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                                        {review.userProfileImageUrl ? (
+                                        {review.userProfileImageUrl && (review.userProfileImageUrl.startsWith('http') || review.userProfileImageUrl.startsWith('data:image')) ? (
                                             <img
                                                 src={review.userProfileImageUrl}
                                                 alt={review.userNickname}
                                                 className="w-full h-full object-cover rounded-full"
                                             />
                                         ) : (
-                                            <UserIcon />
+                                            <span className="text-sm">
+                                                {review.userProfileImageUrl && !['default', 'null', 'undefined'].includes(review.userProfileImageUrl) ? review.userProfileImageUrl : '🥑'}
+                                            </span>
                                         )}
                                     </div>
                                     <span className="text-sm font-medium text-gray-800">{review.userNickname}</span>

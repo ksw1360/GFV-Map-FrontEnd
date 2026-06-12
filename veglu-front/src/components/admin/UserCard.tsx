@@ -5,10 +5,12 @@ export default function UserCard({ user }: { user: UserResponseDto }) {
         <div className="flex items-center px-4 py-3 border border-gray-200 rounded-xl bg-white">
             <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {user.profileImageUrl ? (
+                    {user.profileImageUrl && (user.profileImageUrl.startsWith('http') || user.profileImageUrl.startsWith('data:image')) ? (
                         <img src={user.profileImageUrl} alt={user.nickname} className="w-full h-full object-cover" />
                     ) : (
-                        <UserIcon />
+                        <div className="text-base flex items-center justify-center w-full h-full bg-gray-50">
+                            {user.profileImageUrl && !['default', 'null', 'undefined'].includes(user.profileImageUrl) ? user.profileImageUrl : '🥑'}
+                        </div>
                     )}
                 </div>
                 <div>

@@ -167,10 +167,10 @@ export default function Header({ onLogout, onFilterChange }: HeaderProps) {
                     title="마이페이지로 이동"
                 >
                     <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center border border-gray-200 text-base overflow-hidden shadow-inner flex-shrink-0">
-                        {profileImageUrl === 'default' || !profileImageUrl || profileImageUrl === 'null' ? (
-                            '🥑'
-                        ) : (
+                        {profileImageUrl && (profileImageUrl.startsWith('http') || profileImageUrl.startsWith('data:image')) ? (
                             <img src={profileImageUrl} alt="user-avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            profileImageUrl && !['default', 'null', 'undefined'].includes(profileImageUrl) ? profileImageUrl : '🥑'
                         )}
                     </div>
                     <span className="text-xs font-bold text-gray-700 group-hover:text-green-700 transition-colors">

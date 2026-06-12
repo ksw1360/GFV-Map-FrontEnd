@@ -516,9 +516,13 @@ export default function RestaurantDetailSheet({ restaurant, onClose, isSidebarOp
                                 <div key={rev.reviewId || `${rev.restaurantId || stableRestaurantId}-${idx}`} className="bg-white border border-gray-200 rounded-2xl p-4 text-left space-y-1.5 shadow-sm">
                                     <div className="flex justify-between items-center text-xs">
                                         <div className="flex items-center space-x-2">
-                                            {rev.userProfileImageUrl && (
-                                                <img src={rev.userProfileImageUrl} alt="avatar" className="w-4 h-4 rounded-full object-cover border" />
-                                            )}
+                                            <div className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-gray-50 border overflow-hidden flex-shrink-0">
+                                                {rev.userProfileImageUrl && (rev.userProfileImageUrl.startsWith('http') || rev.userProfileImageUrl.startsWith('data:image')) ? (
+                                                    <img src={rev.userProfileImageUrl} alt="avatar" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    rev.userProfileImageUrl && !['default', 'null', 'undefined'].includes(rev.userProfileImageUrl) ? rev.userProfileImageUrl : '🥑'
+                                                )}
+                                            </div>
                                             <span className="font-bold text-gray-800">{rev.userNickname || '안심인증회원'}</span>
                                         </div>
                                         <span className="text-[10px] text-gray-400 font-semibold">
